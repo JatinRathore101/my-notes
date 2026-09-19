@@ -4,6 +4,11 @@
 
 This is a **multi-topic notes repo** — markdown tutorial notes for whatever CS topic I am studying (`system-design`, `lld`, aur aage jo bhi add ho). Every file is a self-contained tutorial/notes file based on one video/topic.
 
+Repo me do tarah ki entries hoti hain, dono ek hi topic index table me:
+
+1. **Processed notes** — YouTube video ke transcript se bani `notes/<file>.md` study notes.
+2. **Direct links** — bina process kiye store kiya gaya raw web link (article, blog, doc, repo). Iska koi `.md` file nahi banti, sirf table me row jaati hai.
+
 ## Topics & Index Files
 
 - Har note ek **topic** se belong karta hai. Topic slug hamesha **lowercase kebab-case**, no spaces — `system-design`, `lld`, `dbms`.
@@ -16,14 +21,20 @@ This is a **multi-topic notes repo** — markdown tutorial notes for whatever CS
   ```markdown
   # SYSTEM DESIGN
 
-  | # | Date | Title | Link to video | Link to file |
+  | # | Date | Title | Web link | Link to file |
   |---|------|-------|---------------|--------------|
   | 1 | 05 Sep 2026 | <Video Title> | [Watch](<youtube-url>) | [Open notes](./notes/<filename>.md) |
+  | 2 | 20 Sep 2026 | <Link Title> | [Link](<web-url>) | |
   ```
 
-- Naya note banne pe us topic ki table file me **sirf ek nayi row append** karo (`#` last row se +1). Existing rows ko na edit karo, na reorder.
+- **Columns har topic file me bilkul same rehte hain** — `# | Date | Title | Web link | Link to file`. Column kabhi add/remove/rename mat karo; values khaali ho sakti hain, headers nahi.
+- Row types (dono ek hi table me, ek hi `#` sequence me):
+  - **Processed note row** — `Web link` = `[Watch](<youtube-url>)`, `Link to file` = `[Open notes](./notes/<filename>.md)`.
+  - **Direct link row** — `Web link` = `[Link](<web-url>)`, `Link to file` **khaali** (` | |`), kyunki koi note file generate nahi hui.
+- Nayi entry (note ya direct link) pe us topic ki table file me **sirf ek nayi row append** karo (`#` last row se +1). Existing rows ko na edit karo, na reorder.
 - Topic ki table file exist nahi karti toh nayi banao — heading + table header + row `1`.
 - **Naya topic** banaya ho toh `README.md` ke "Notes Index" table me bhi us topic ki ek row add kar do. Purana topic hai toh README ko haath mat lagao.
+- **Entry delete** karte waqt (`prompt/delete-table-row.prompt.md`): row hatao, bachi rows ko `1..N` renumber karo (order badle bina), row se linked `notes/` file bhi delete karo. Table me ek bhi row na bache toh `<topic-slug>.table.md` file delete kar do aur `README.md` ke Notes Index se us topic ki row bhi hata do.
 
 ## Language & Tone (MOST IMPORTANT)
 

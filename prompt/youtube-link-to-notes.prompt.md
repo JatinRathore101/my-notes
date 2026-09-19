@@ -123,7 +123,7 @@ After creating the notes file, you MUST record it in that topic's index file at 
    * `#` — last row ka serial number +1.
    * `Date` — same date as in the notes file (`DD MMM YYYY`).
    * `Title` — the exact video title.
-   * `Link to video` — `[Watch](<youtube-url>)`.
+   * `Web link` — `[Watch](<youtube-url>)`.
    * `Link to file` — clickable relative link, e.g. `[Open notes](./notes/<filename>.md)`.
    * Do NOT modify, reorder, or renumber existing rows — only append.
 3. **If it does not exist** — create it with the topic display name as H1, the table header, and this note as row `1`:
@@ -131,13 +131,16 @@ After creating the notes file, you MUST record it in that topic's index file at 
    ```markdown
    # SYSTEM DESIGN
 
-   | # | Date | Title | Link to video | Link to file |
+   | # | Date | Title | Web link | Link to file |
    |---|------|-------|---------------|--------------|
    | 1 | 06 Sep 2026 | <Video Title> | [Watch](<youtube-url>) | [Open notes](./notes/<filename>.md) |
    ```
 
 * Index files always live at the repo root, never inside `notes/`.
 * Never create a new index file for a topic that already has one — check first.
+* Ek hi table me **direct (unprocessed) web link** wali rows bhi ho sakti hain — unka `Web link` `[Link](...)` hota hai aur `Link to file` khaali hota hai (dekho [store-direct-link.prompt.md](./store-direct-link.prompt.md)).
+  * Serial number `#` dono tarah ki rows ko milakar ek hi sequence me chalta hai — last row ka number +1 lo, chahe wo direct-link row ho.
+  * Un rows ko na chhedo, na renumber karo. Columns hamesha `# | Date | Title | Web link | Link to file` hi rahenge.
 
 ## UPDATE THE README (only for a brand-new topic)
 
