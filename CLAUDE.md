@@ -34,7 +34,7 @@ Repo me do tarah ki entries hoti hain, dono ek hi topic index table me:
 - Nayi entry (note ya direct link) pe us topic ki table file me **sirf ek nayi row append** karo (`#` last row se +1). Existing rows ko na edit karo, na reorder.
 - Topic ki table file exist nahi karti toh nayi banao — heading + table header + row `1`.
 - **Naya topic** banaya ho toh `README.md` ke "Notes Index" table me bhi us topic ki ek row add kar do. Purana topic hai toh README ko haath mat lagao.
-- **Entry delete** karte waqt (`prompt/delete-table-row.prompt.md`): row hatao, bachi rows ko `1..N` renumber karo (order badle bina), row se linked `notes/` file bhi delete karo. Table me ek bhi row na bache toh `<topic-slug>.table.md` file delete kar do aur `README.md` ke Notes Index se us topic ki row bhi hata do.
+- **Entry delete** karte waqt (`prompts/delete-table-row.prompt.md`): row hatao, bachi rows ko `1..N` renumber karo (order badle bina), row se linked `notes/` file bhi delete karo. Table me ek bhi row na bache toh `<topic-slug>.table.md` file delete kar do aur `README.md` ke Notes Index se us topic ki row bhi hata do.
 
 ## Language & Tone (MOST IMPORTANT)
 

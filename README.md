@@ -10,7 +10,7 @@
 ```text
 my-notes/
 ├── notes/               # Saare tutorial notes (ek video = ek file, sab topics ek hi folder me)
-├── prompt/              # Reusable prompts (video → notes, direct link store, entry delete)
+├── prompts/             # Reusable prompts (video → notes, direct link store, entry delete)
 ├── <topic>.table.md     # Per-topic index (date, title, web link, file link)
 └── CLAUDE.md            # Notes likhne ke rules (language, tone, formatting)
 ```
@@ -42,7 +42,7 @@ Har index file me **exactly ye 5 columns** hote hain — dono tarah ki entries e
 ## Naya Note Kaise Banate Hain?
 
 1. YouTube video ka URL lo aur decide karo ye kis **topic** ka hai (e.g. `system-design`, `lld`).
-2. [youtube-link-to-notes.prompt.md](./prompt/youtube-link-to-notes.prompt.md) wala prompt Claude Code me use karo — URL **aur** topic name ke saath.
+2. [youtube-link-to-notes.prompt.md](./prompts/youtube-link-to-notes.prompt.md) wala prompt Claude Code me use karo — URL **aur** topic name ke saath.
 3. Prompt automatically:
    - Video ka **title aur public transcript** fetch karta hai (video download nahi hota).
    - Transcript ko clean, structured study notes me convert karta hai.
@@ -55,7 +55,7 @@ Har index file me **exactly ye 5 columns** hote hain — dono tarah ki entries e
 Jab koi article/blog/doc bas **save** karna ho, notes banane ki zarurat na ho:
 
 1. Link, uska **title** aur **topic** decide karo.
-2. [store-direct-link.prompt.md](./prompt/store-direct-link.prompt.md) wala prompt Claude Code me use karo — link + title + topic ke saath.
+2. [store-direct-link.prompt.md](./prompts/store-direct-link.prompt.md) wala prompt Claude Code me use karo — link + title + topic ke saath.
 3. Prompt automatically:
    - Link ko **fetch/process nahi karta** (zero token waste) — sirf as-is store karta hai.
    - `<topic>.table.md` me nayi row add karta hai, `Link to file` column khaali chhod kar.
@@ -65,7 +65,7 @@ Jab koi article/blog/doc bas **save** karna ho, notes banane ki zarurat na ho:
 ## Koi Entry Delete Kaise Karein?
 
 1. Topic aur us entry ka **row number** (`#` column wali value) note kar lo.
-2. [delete-table-row.prompt.md](./prompt/delete-table-row.prompt.md) wala prompt Claude Code me use karo — topic + row number ke saath.
+2. [delete-table-row.prompt.md](./prompts/delete-table-row.prompt.md) wala prompt Claude Code me use karo — topic + row number ke saath.
 3. Prompt automatically:
    - Row dikha kar pehle **confirmation maangta hai** (delete destructive hai).
    - Row se linked note file `notes/` se delete karta hai (direct link row ho toh koi file nahi).
