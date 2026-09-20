@@ -2,11 +2,11 @@
 
 ## About This Repo
 
-This is a **multi-topic notes repo** — markdown tutorial notes for whatever CS topic I am studying (`system-design`, `lld`, aur aage jo bhi add ho). Every file is a self-contained tutorial/notes file based on one video/topic.
+This is a **multi-topic notes repo** — markdown tutorial notes for whatever CS topic I am studying (`system-design`, `git`, `lld`, aur aage jo bhi add ho). Every file is a self-contained tutorial/notes file based on one video/topic. Saare topics ki list `topics.md` me hai.
 
 Repo me do tarah ki entries hoti hain, dono ek hi topic index table me:
 
-1. **Processed notes** — YouTube video ke transcript se bani `notes/<file>.md` study notes.
+1. **Processed notes** — `notes/<file>.md` study notes, zyada tar YouTube video ke transcript se bani (kabhi kisi aur source, jaise conversation/article, se bhi ban sakti hain).
 2. **Direct links** — bina process kiye store kiya gaya raw web link (article, blog, doc, repo). Iska koi `.md` file nahi banti, sirf table me row jaati hai.
 
 ## Topics & Index Files
@@ -33,9 +33,29 @@ Repo me do tarah ki entries hoti hain, dono ek hi topic index table me:
   - **Processed note row** — `Web link` = `[Watch](<youtube-url>)`, `Link to file` = `[Open notes](../notes/<filename>.md)`.
   - **Direct link row** — `Web link` = `[Link](<web-url>)`, `Link to file` **khaali** (` | |`), kyunki koi note file generate nahi hui.
 - Nayi entry (note ya direct link) pe us topic ki table file me **sirf ek nayi row append** karo (`#` last row se +1). Existing rows ko na edit karo, na reorder.
+- Row add karne se pehle **duplicate check** karo — same URL us table me pehle se ho toh row add mat karo, bata do ki row `#N` pe already hai.
+- `Title` me `|` character ho toh `\|` likho, taaki markdown table na tootay.
 - Topic ki table file exist nahi karti toh nayi banao — heading + table header + row `1`.
-- **Naya topic** banaya ho toh `README.md` ke "Notes Index" table me bhi us topic ki ek row add kar do. Purana topic hai toh README ko haath mat lagao.
-- **Entry delete** karte waqt (`prompts/delete-table-row.prompt.md`): row hatao, bachi rows ko `1..N` renumber karo (order badle bina), row se linked `notes/` file bhi delete karo. Table me ek bhi row na bache toh `tables/<topic-slug>.table.md` file delete kar do aur `README.md` ke Notes Index se us topic ki row bhi hata do.
+- Repo root pe **`topics.md`** = saare topics ka table of contents. Columns fix: `# | Topic | Link to table`. Rows ki count hamesha `tables/` folder ki files ki count ke equal honi chahiye — har table file ki exactly ek row. Format:
+
+  ```markdown
+  # TOPICS
+
+  | # | Topic | Link to table |
+  |---|-------|---------------|
+  | 1 | SYSTEM DESIGN | [system-design.table.md](./tables/system-design.table.md) |
+  ```
+
+- **Naya topic** banaya (nayi table file) ho toh `topics.md` me ek row append karo (`#` last row se +1, `Topic` = display name, link `./tables/<topic-slug>.table.md`). Purana topic hai toh `topics.md` ko haath mat lagao.
+- **Entry delete** karte waqt (`prompts/delete-table-row.prompt.md`): row hatao, bachi rows ko `1..N` renumber karo (order badle bina), row se linked `notes/` file bhi delete karo. Table me ek bhi row na bache toh `tables/<topic-slug>.table.md` file delete kar do, `topics.md` se us topic ki row hatao aur bachi rows ko `1..N` renumber karo (order badle bina).
+
+## Prompts
+
+- Repo ke standard workflows `prompts/` folder me hain — inhi ko follow karo, apna alag process mat banao:
+  - `prompts/youtube-link-to-notes.prompt.md` — YouTube video → `notes/` file + table row.
+  - `prompts/store-direct-link.prompt.md` — raw web link → sirf table row, koi notes file nahi.
+  - `prompts/delete-table-row.prompt.md` — ek entry delete (confirm ke baad) + renumber.
+- Git commands (add, commit, stage/unstage) kabhi khud mat chalao — main manually karta hoon.
 
 ## Language & Tone (MOST IMPORTANT)
 

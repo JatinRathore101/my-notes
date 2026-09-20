@@ -22,17 +22,18 @@ Rules:
   * Slug is used for the index filename: `tables/<topic-slug>.table.md`.
 * **Display name** = slug ke saare non-alphanumeric chars ko space se replace karo, poora UPPERCASE.
   * `system-design` → `SYSTEM DESIGN`, `lld` → `LLD`.
+  * Display name index file ki H1 heading aur `topics.md` ke `Topic` column me hota hai.
 
 ## STEP 1 — LOCATE & CONFIRM (delete se pehle)
 
 1. `tables/` folder me `tables/<topic-slug>.table.md` dhoondo.
    * File hi na mile — STOP. Mujhe bata do ki is topic ka koi index file nahi hai. Kuch aur mat karo.
-2. Table me diya hua `#` row dhoondo.
+2. Table me diya hua `#` row dhoondo. Row numbers hamesha **current table ke `#` values** hain — multiple deletions me bhi yahi original numbers use karo, kyunki renumber sabse end me ek baar hota hai.
    * Row na mile (number range se bahar hai) — STOP. Table me kitni rows hain wo bata do. Kuch delete mat karo.
-3. Mujhe **confirm karne ke liye dikhao**:
+3. Mujhe **confirm karne ke liye dikhao** (multiple row numbers diye hon toh har row ke liye):
    * Poori row (date, title, web link).
    * Kaunsi note file delete hogi (ya "koi note file nahi — ye direct link row hai").
-   * Agar ye table ki **last remaining row** hai toh ye bhi batao ki table file **aur** README ki Notes Index row bhi delete hogi.
+   * Agar ye table ki **last remaining row** hai toh ye bhi batao ki table file **aur** `topics.md` ki us topic wali row bhi delete hogi (baaki rows renumber hongi).
 4. Mera explicit **"haan / yes / confirm"** aane ke baad hi Step 2 karo. Bina confirmation ke kuch delete mat karo.
 
 ## STEP 2 — DELETE THE ATTACHED NOTE FILE
@@ -68,15 +69,17 @@ Rules:
 Agar row hatane ke baad table me **ek bhi data row nahi bachi**:
 
 1. `tables/<topic-slug>.table.md` file ko **delete kar do** (khaali table chhodna nahi hai).
-2. `README.md` ke `## Notes Index` table se us topic ki row bhi hata do:
+2. `topics.md` (repo root) se us topic ki row hata do — wo row jiska `Link to table` `./tables/<topic-slug>.table.md` pe point karta hai:
 
    ```markdown
-   | SYSTEM DESIGN | [system-design.table.md](./tables/system-design.table.md) |
+   | 3 | LLD | [lld.table.md](./tables/lld.table.md) |
    ```
 
-3. Baaki topics ki rows ko mat chhedo. Agar Notes Index bilkul khaali ho jaye toh table header rehne do.
+3. Bachi rows ko `1..N` **renumber** karo (order badle bina) — sirf `#` column badlo, `Topic` aur `Link to table` waise hi.
+4. Agar `topics.md` bilkul khaali ho jaye toh H1 + table header rehne do.
+5. Check: `topics.md` ki rows ki count == `tables/` folder ki files ki count.
 
-Agar rows bachi hain toh `README.md` ko **haath mat lagao**.
+Agar rows bachi hain toh `topics.md` ko **haath mat lagao**.
 
 ## HARD RULES
 
@@ -101,7 +104,7 @@ Linked note file delete (agar hai)
     ↓
 Row hatao + bachi rows ko 1..N renumber karo
     ↓
-Koi row nahi bachi → table file delete + README Notes Index row delete
+Koi row nahi bachi → table file delete + topics.md row delete + renumber
 ```
 
 ## OUTPUT
@@ -112,4 +115,4 @@ Kaam hone ke baad mujhe sirf ye do:
 2. Note file delete hui ya nahi (path ke saath), ya "direct link row — koi file nahi thi"
 3. Table me ab kitni rows bachi hain, aur renumber hua ya nahi
 4. Table file delete hui ya nahi
-5. `README.md` update hua ya nahi
+5. `topics.md` update hua ya nahi

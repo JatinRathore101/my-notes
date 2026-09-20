@@ -23,7 +23,7 @@ Rules:
   * Slug is used for the index filename: `tables/<topic-slug>.table.md`.
 * **Display name** = slug ke saare non-alphanumeric chars ko space se replace karo, poora UPPERCASE.
   * `system-design` → `SYSTEM DESIGN`, `lld` → `LLD`.
-  * Display name is used as the index file's H1 heading.
+  * Display name is used as the index file's H1 heading and in the `Topic` column of `topics.md`.
 
 ## IMPORTANT — DO NOT PROCESS THE LINK
 
@@ -63,7 +63,7 @@ Direct link row me `Link to file` column **khaali** rehta hai (kyunki koi note f
 * `Web link` — `[Link](<web-url>)`. (YouTube-notes rows `[Watch](...)` use karti hain, unhe waisa hi rehne do.)
 * `Link to file` — **empty** (` | |` — do pipes ke beech kuch nahi, bas ek space).
 
-## UPDATE THE TOPIC INDEX (`<topic-slug>.table.md`)
+## UPDATE THE TOPIC INDEX (`tables/<topic-slug>.table.md`)
 
 1. Look for `tables/<topic-slug>.table.md` inside the **`tables/` folder** (e.g. `tables/system-design.table.md`).
 2. **If it exists** — append ONE new row at the very end of the table.
@@ -88,15 +88,22 @@ Direct link row me `Link to file` column **khaali** rehta hai (kyunki koi note f
 * Row add karne se pehle table me check karo ki same URL pehle se toh nahi hai.
 * Already exist karta ho toh **row add mat karo** — mujhe bata do ki ye link pehle se row `#N` pe maujood hai.
 
-## UPDATE THE README (only for a brand-new topic)
+## UPDATE `topics.md` (only for a brand-new topic)
 
-* Agar tumhe `<topic-slug>.table.md` **banana** pada (yaani is topic ki repo me pehli entry hai), toh `README.md` ke `## Notes Index` table me bhi ek row add kar do:
+* `topics.md` (repo root) saare topics ka table of contents hai — columns `# | Topic | Link to table`, `tables/` ki har file ki ek row.
+* Agar tumhe `tables/<topic-slug>.table.md` **banana** pada (yaani is topic ki repo me pehli entry hai), toh `topics.md` ke end me ek row append karo:
+  * `#` — last row +1.
+  * `Topic` — topic display name (UPPERCASE).
+  * `Link to table` — `[<topic-slug>.table.md](./tables/<topic-slug>.table.md)`.
+
+  Example (illustrative — apna `#`, display name aur slug use karo):
 
   ```markdown
-  | SYSTEM DESIGN | [system-design.table.md](./tables/system-design.table.md) |
+  | 5 | DBMS | [dbms.table.md](./tables/dbms.table.md) |
   ```
 
-* Topic ki index file pehle se exist karti thi toh `README.md` ko **haath mat lagao**.
+* Existing rows ko na edit karo, na reorder, na renumber.
+* Topic ki index file pehle se exist karti thi toh `topics.md` ko **haath mat lagao**.
 
 ## TOKEN/CREDIT EFFICIENCY
 
@@ -113,10 +120,12 @@ Duplicate URL check
     ↓
 Append one row (Link to file column empty)
     ↓
-If topic was new → add row to README Notes Index
+If topic was new → append row to topics.md
 ```
 
 **Never fetch or process the link's content.**
+
+**Git commands bilkul mat chalao** — na `git add`, na commit, na stage/unstage. Main khud karunga.
 
 After you're done, give me only:
 
@@ -124,4 +133,4 @@ After you're done, give me only:
 2. The topic slug used
 3. Which index file the row was added to, and whether that index file was newly created
 4. The row number assigned
-5. Whether `README.md` was updated (only happens for a brand-new topic)
+5. Whether `topics.md` was updated (only happens for a brand-new topic)

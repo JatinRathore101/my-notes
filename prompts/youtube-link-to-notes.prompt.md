@@ -18,7 +18,7 @@ If I forget to give the **topic**, STOP and ask me for it. Do NOT guess the topi
   * Slug is used for the index filename: `tables/<topic-slug>.table.md`.
 * **Display name** = slug ke saare non-alphanumeric chars ko space se replace karo, poora UPPERCASE.
   * `system-design` → `SYSTEM DESIGN`, `lld` → `LLD`.
-  * Display name is used inside the note header and as the index file's H1 heading.
+  * Display name is used inside the note header, as the index file's H1 heading, and in the `Topic` column of `topics.md`.
 
 ## IMPORTANT — DO NOT PROCESS THE VIDEO
 
@@ -37,7 +37,7 @@ If I forget to give the **topic**, STOP and ask me for it. Do NOT guess the topi
 
 YouTube ab simple transcript fetching block karta hai, isliye method hunting mat karo. Ye exact steps follow karo — 20 Sep 2026 ko verified.
 
-Saara kaam **scratchpad directory** me karo (repo me koi temp file nahi jaani chahiye).
+Saara kaam **scratchpad directory** me karo (repo me koi temp file nahi jaani chahiye). Neeche `$SCRATCHPAD` = session ki scratchpad directory ka path (system prompt me diya hota hai) — use apne path se replace karo.
 
 ### Step 1 — Video title (`videoDetails.title` se)
 
@@ -139,7 +139,7 @@ Once you have obtained the **video title and complete transcript**:
 
 ## NOTE QUALITY
 
-The output should feel like **professional computer-science study notes**, suitable for:
+The output should feel like **professional computer-science study notes**, suitable for revision and interview prep without re-watching the video.
 
 Use:
 
@@ -162,7 +162,7 @@ Do not add large amounts of information that was not covered in the transcript. 
 
 Create a `.md` file containing the complete study material.
 
-The file must be created inside the `/notes` directory of this repo.
+The file must be created inside the `notes/` folder of this repo (flat — no topic subfolders).
 
 The filename must be based on the **exact video title**, with:
 
@@ -198,7 +198,7 @@ The file must start with an H1 title followed by this exact header block:
 - Header block ke baad hi content start ho.
 - Adapt the rest of the structure to the actual content. Do not force unnecessary sections.
 
-## UPDATE THE TOPIC INDEX (`<topic-slug>.table.md`)
+## UPDATE THE TOPIC INDEX (`tables/<topic-slug>.table.md`)
 
 After creating the notes file, you MUST record it in that topic's index file inside the **`tables/` folder**.
 
@@ -206,7 +206,7 @@ After creating the notes file, you MUST record it in that topic's index file ins
 2. **If it exists** — append ONE new row at the end of the table:
    * `#` — last row ka serial number +1.
    * `Date` — same date as in the notes file (`DD MMM YYYY`).
-   * `Title` — the exact video title.
+   * `Title` — the exact video title. Title me `|` ho toh `\|` likho, taaki table na tootay.
    * `Web link` — `[Watch](<youtube-url>)`.
    * `Link to file` — clickable relative link, e.g. `[Open notes](../notes/<filename>.md)`. Path `tables/` folder ke relative hai, isliye `../notes/` (NOT `./notes/`).
    * Do NOT modify, reorder, or renumber existing rows — only append.
@@ -222,19 +222,27 @@ After creating the notes file, you MUST record it in that topic's index file ins
 
 * Index files always live inside `tables/`, never at the repo root or inside `notes/`.
 * Never create a new index file for a topic that already has one — check first.
+* **Duplicate check:** row add karne se pehle dekho ki same YouTube URL us table me pehle se toh nahi hai. Ho toh notes file mat banao, STOP karo aur mujhe batao ki row `#N` pe already hai.
 * Ek hi table me **direct (unprocessed) web link** wali rows bhi ho sakti hain — unka `Web link` `[Link](...)` hota hai aur `Link to file` khaali hota hai (dekho [store-direct-link.prompt.md](./store-direct-link.prompt.md)).
   * Serial number `#` dono tarah ki rows ko milakar ek hi sequence me chalta hai — last row ka number +1 lo, chahe wo direct-link row ho.
   * Un rows ko na chhedo, na renumber karo. Columns hamesha `# | Date | Title | Web link | Link to file` hi rahenge.
 
-## UPDATE THE README (only for a brand-new topic)
+## UPDATE `topics.md` (only for a brand-new topic)
 
-* If you had to **create** the `<topic-slug>.table.md` file (i.e. this is the repo's first note for that topic), also add a row for it in the `## Notes Index` table inside `README.md`:
+* `topics.md` (repo root) is the table of contents of all topics — columns `# | Topic | Link to table`, one row per file in `tables/`.
+* If you had to **create** the `tables/<topic-slug>.table.md` file (i.e. this is the repo's first note for that topic), append ONE row at the end of `topics.md`:
+  * `#` — last row +1.
+  * `Topic` — the topic display name (UPPERCASE).
+  * `Link to table` — `[<topic-slug>.table.md](./tables/<topic-slug>.table.md)`.
+
+  Example (illustrative — apna `#`, display name aur slug use karo):
 
   ```markdown
-  | SYSTEM DESIGN | [system-design.table.md](./tables/system-design.table.md) |
+  | 5 | DBMS | [dbms.table.md](./tables/dbms.table.md) |
   ```
 
-* If the topic's index file already existed, **do not touch `README.md`** at all.
+* Do NOT edit, reorder or renumber existing rows in `topics.md`.
+* If the topic's index file already existed, **do not touch `topics.md`** at all.
 
 ## TOKEN/CREDIT EFFICIENCY
 
@@ -247,7 +255,7 @@ YouTube URL + Topic
     ↓
 Normalize topic → slug + display name
     ↓
-Fetch TITLE (watch page curl + grep)
+Fetch TITLE (watch page curl + videoDetails regex)
     ↓
 Fetch existing PUBLIC TRANSCRIPT/CAPTIONS (yt-dlp, ios player client)
     ↓
@@ -259,10 +267,12 @@ Save as notes/<video-title>.md
     ↓
 Append row to tables/<topic-slug>.table.md (create if missing)
     ↓
-If topic was new → add row to README Notes Index
+If topic was new → append row to topics.md
 ```
 
 **Never use the video itself as input to Claude.**
+
+**Git commands bilkul mat chalao** — na `git add`, na commit, na stage/unstage. Main khud karunga.
 
 Do not unnecessarily reproduce the raw transcript in the conversation. The final `.md` file should contain the **cleaned study material/notes**, not the raw transcript.
 
@@ -272,6 +282,6 @@ After successfully creating the file, give me only:
 2. The notes file path
 3. The topic slug used
 4. Which index file the row was added to, and whether that index file was newly created
-5. Whether `README.md` was updated (only happens for a brand-new topic)
+5. Whether `topics.md` was updated (only happens for a brand-new topic)
 
 If the transcript cannot be obtained through a free/public source, explain the problem briefly and do not process the video.
