@@ -19,13 +19,13 @@ Rules:
 
 * **Slug** = lowercase, non-alphanumeric chars replaced with `-`, repeated `-` collapsed, leading/trailing `-` removed.
   * `System Design` / `system_design` / `System-Design` → all become `system-design`.
-  * Slug is used for the index filename: `<topic-slug>.table.md`.
+  * Slug is used for the index filename: `tables/<topic-slug>.table.md`.
 * **Display name** = slug ke saare non-alphanumeric chars ko space se replace karo, poora UPPERCASE.
   * `system-design` → `SYSTEM DESIGN`, `lld` → `LLD`.
 
 ## STEP 1 — LOCATE & CONFIRM (delete se pehle)
 
-1. Repo root pe `<topic-slug>.table.md` dhoondo.
+1. `tables/` folder me `tables/<topic-slug>.table.md` dhoondo.
    * File hi na mile — STOP. Mujhe bata do ki is topic ka koi index file nahi hai. Kuch aur mat karo.
 2. Table me diya hua `#` row dhoondo.
    * Row na mile (number range se bahar hai) — STOP. Table me kitni rows hain wo bata do. Kuch delete mat karo.
@@ -37,7 +37,7 @@ Rules:
 
 ## STEP 2 — DELETE THE ATTACHED NOTE FILE
 
-* Row ke `Link to file` column se file path nikalo (e.g. `[Open notes](./notes/Some-Title.md)` → `notes/Some-Title.md`).
+* Row ke `Link to file` column se file path nikalo (e.g. `[Open notes](../notes/Some-Title.md)` → `notes/Some-Title.md`; path table file ke relative hota hai, isliye `../`).
 * Column **khaali** ho (direct link row) — koi file delete nahi karni. Seedha table wale step pe jao.
 * Path ho toh:
   * Pehle check karo file actually exist karti hai.
@@ -67,11 +67,11 @@ Rules:
 
 Agar row hatane ke baad table me **ek bhi data row nahi bachi**:
 
-1. `<topic-slug>.table.md` file ko **delete kar do** (khaali table chhodna nahi hai).
+1. `tables/<topic-slug>.table.md` file ko **delete kar do** (khaali table chhodna nahi hai).
 2. `README.md` ke `## Notes Index` table se us topic ki row bhi hata do:
 
    ```markdown
-   | SYSTEM DESIGN | [system-design.table.md](./system-design.table.md) |
+   | SYSTEM DESIGN | [system-design.table.md](./tables/system-design.table.md) |
    ```
 
 3. Baaki topics ki rows ko mat chhedo. Agar Notes Index bilkul khaali ho jaye toh table header rehne do.
@@ -93,7 +93,7 @@ Topic + Row number
     ↓
 Normalize topic → slug + display name
     ↓
-Locate <topic-slug>.table.md (na mile → STOP)
+Locate tables/<topic-slug>.table.md (na mile → STOP)
     ↓
 Row nikalo, mujhe dikhao → CONFIRMATION ka wait
     ↓

@@ -20,7 +20,7 @@ Rules:
 
 * **Slug** = lowercase, non-alphanumeric chars replaced with `-`, repeated `-` collapsed, leading/trailing `-` removed.
   * `System Design` / `system_design` / `System-Design` → all become `system-design`.
-  * Slug is used for the index filename: `<topic-slug>.table.md`.
+  * Slug is used for the index filename: `tables/<topic-slug>.table.md`.
 * **Display name** = slug ke saare non-alphanumeric chars ko space se replace karo, poora UPPERCASE.
   * `system-design` → `SYSTEM DESIGN`, `lld` → `LLD`.
   * Display name is used as the index file's H1 heading.
@@ -38,7 +38,7 @@ Rules:
 ## TASK
 
 1. Topic ko normalize karo → slug + display name.
-2. Repo root pe `<topic-slug>.table.md` dhoondo.
+2. `tables/` folder me `tables/<topic-slug>.table.md` dhoondo.
 3. File mile toh usme **sirf ek nayi row append** karo. Na mile toh nayi file banao.
 4. Bas. Aur kuch nahi.
 
@@ -65,7 +65,7 @@ Direct link row me `Link to file` column **khaali** rehta hai (kyunki koi note f
 
 ## UPDATE THE TOPIC INDEX (`<topic-slug>.table.md`)
 
-1. Look for `<topic-slug>.table.md` at the **repo root** (e.g. `system-design.table.md`).
+1. Look for `tables/<topic-slug>.table.md` inside the **`tables/` folder** (e.g. `tables/system-design.table.md`).
 2. **If it exists** — append ONE new row at the very end of the table.
    * Existing rows ko na edit karo, na reorder karo, na renumber karo.
    * Table ka header row change mat karo — wo already `# | Date | Title | Web link | Link to file` hona chahiye.
@@ -80,7 +80,7 @@ Direct link row me `Link to file` column **khaali** rehta hai (kyunki koi note f
    | 1 | 20 Sep 2026 | <Title> | [Link](<web-url>) | |
    ```
 
-* Index files always live at the repo root, never inside `notes/`.
+* Index files always live inside `tables/`, never at the repo root or inside `notes/`.
 * Never create a new index file for a topic that already has one — check first.
 
 ## DUPLICATE CHECK
@@ -93,7 +93,7 @@ Direct link row me `Link to file` column **khaali** rehta hai (kyunki koi note f
 * Agar tumhe `<topic-slug>.table.md` **banana** pada (yaani is topic ki repo me pehli entry hai), toh `README.md` ke `## Notes Index` table me bhi ek row add kar do:
 
   ```markdown
-  | SYSTEM DESIGN | [system-design.table.md](./system-design.table.md) |
+  | SYSTEM DESIGN | [system-design.table.md](./tables/system-design.table.md) |
   ```
 
 * Topic ki index file pehle se exist karti thi toh `README.md` ko **haath mat lagao**.
@@ -107,7 +107,7 @@ Web link + Title + Topic
     ↓
 Normalize topic → slug + display name
     ↓
-Locate <topic-slug>.table.md at repo root (create if missing)
+Locate tables/<topic-slug>.table.md (create if missing)
     ↓
 Duplicate URL check
     ↓

@@ -15,7 +15,7 @@ If I forget to give the **topic**, STOP and ask me for it. Do NOT guess the topi
 
 * **Slug** = lowercase, non-alphanumeric chars replaced with `-`, repeated `-` collapsed, leading/trailing `-` removed.
   * `System Design` / `system_design` / `System-Design` → all become `system-design`.
-  * Slug is used for the index filename: `<topic-slug>.table.md`.
+  * Slug is used for the index filename: `tables/<topic-slug>.table.md`.
 * **Display name** = slug ke saare non-alphanumeric chars ko space se replace karo, poora UPPERCASE.
   * `system-design` → `SYSTEM DESIGN`, `lld` → `LLD`.
   * Display name is used inside the note header and as the index file's H1 heading.
@@ -200,15 +200,15 @@ The file must start with an H1 title followed by this exact header block:
 
 ## UPDATE THE TOPIC INDEX (`<topic-slug>.table.md`)
 
-After creating the notes file, you MUST record it in that topic's index file at the **repo root**.
+After creating the notes file, you MUST record it in that topic's index file inside the **`tables/` folder**.
 
-1. Look for `<topic-slug>.table.md` at the repo root (e.g. `system-design.table.md`).
+1. Look for `tables/<topic-slug>.table.md` (e.g. `tables/system-design.table.md`).
 2. **If it exists** — append ONE new row at the end of the table:
    * `#` — last row ka serial number +1.
    * `Date` — same date as in the notes file (`DD MMM YYYY`).
    * `Title` — the exact video title.
    * `Web link` — `[Watch](<youtube-url>)`.
-   * `Link to file` — clickable relative link, e.g. `[Open notes](./notes/<filename>.md)`.
+   * `Link to file` — clickable relative link, e.g. `[Open notes](../notes/<filename>.md)`. Path `tables/` folder ke relative hai, isliye `../notes/` (NOT `./notes/`).
    * Do NOT modify, reorder, or renumber existing rows — only append.
 3. **If it does not exist** — create it with the topic display name as H1, the table header, and this note as row `1`:
 
@@ -217,10 +217,10 @@ After creating the notes file, you MUST record it in that topic's index file at 
 
    | # | Date | Title | Web link | Link to file |
    |---|------|-------|---------------|--------------|
-   | 1 | 06 Sep 2026 | <Video Title> | [Watch](<youtube-url>) | [Open notes](./notes/<filename>.md) |
+   | 1 | 06 Sep 2026 | <Video Title> | [Watch](<youtube-url>) | [Open notes](../notes/<filename>.md) |
    ```
 
-* Index files always live at the repo root, never inside `notes/`.
+* Index files always live inside `tables/`, never at the repo root or inside `notes/`.
 * Never create a new index file for a topic that already has one — check first.
 * Ek hi table me **direct (unprocessed) web link** wali rows bhi ho sakti hain — unka `Web link` `[Link](...)` hota hai aur `Link to file` khaali hota hai (dekho [store-direct-link.prompt.md](./store-direct-link.prompt.md)).
   * Serial number `#` dono tarah ki rows ko milakar ek hi sequence me chalta hai — last row ka number +1 lo, chahe wo direct-link row ho.
@@ -231,7 +231,7 @@ After creating the notes file, you MUST record it in that topic's index file at 
 * If you had to **create** the `<topic-slug>.table.md` file (i.e. this is the repo's first note for that topic), also add a row for it in the `## Notes Index` table inside `README.md`:
 
   ```markdown
-  | SYSTEM DESIGN | [system-design.table.md](./system-design.table.md) |
+  | SYSTEM DESIGN | [system-design.table.md](./tables/system-design.table.md) |
   ```
 
 * If the topic's index file already existed, **do not touch `README.md`** at all.
@@ -257,7 +257,7 @@ Generate study notes
     ↓
 Save as notes/<video-title>.md
     ↓
-Append row to <topic-slug>.table.md (create if missing)
+Append row to tables/<topic-slug>.table.md (create if missing)
     ↓
 If topic was new → add row to README Notes Index
 ```

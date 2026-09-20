@@ -15,7 +15,7 @@ Repo me do tarah ki entries hoti hain, dono ek hi topic index table me:
 - Agar topic input kisi aur form me mile (`System Design`, `system_design`), toh normalize karo: lowercase karo → non-alphanumeric chars ko `-` se replace karo → repeated `-` collapse karo → aage-peeche ke `-` hata do.
 - **Topic display name** = slug ke saare non-alphanumeric chars ko space se replace karo aur poora UPPERCASE kar do. Example: `system-design` → `SYSTEM DESIGN`.
 - **Notes hamesha flat `notes/` folder me** rehte hain — topic-wise subfolder kabhi mat banao.
-- Har topic ka apna index file repo root pe: **`<topic-slug>.table.md`** (e.g. `system-design.table.md`, `lld.table.md`).
+- Har topic ka apna index file `tables/` folder me: **`tables/<topic-slug>.table.md`** (e.g. `tables/system-design.table.md`, `tables/lld.table.md`). Table files kabhi repo root ya `notes/` me nahi.
 - Index file ka format fix hai — `# <TOPIC DISPLAY NAME>` heading, phir ye table:
 
   ```markdown
@@ -23,18 +23,19 @@ Repo me do tarah ki entries hoti hain, dono ek hi topic index table me:
 
   | # | Date | Title | Web link | Link to file |
   |---|------|-------|---------------|--------------|
-  | 1 | 05 Sep 2026 | <Video Title> | [Watch](<youtube-url>) | [Open notes](./notes/<filename>.md) |
+  | 1 | 05 Sep 2026 | <Video Title> | [Watch](<youtube-url>) | [Open notes](../notes/<filename>.md) |
   | 2 | 20 Sep 2026 | <Link Title> | [Link](<web-url>) | |
   ```
 
+- `Link to file` ka path **`tables/` folder ke relative** hota hai, isliye hamesha `../notes/<filename>.md` likho (`./notes/` nahi).
 - **Columns har topic file me bilkul same rehte hain** — `# | Date | Title | Web link | Link to file`. Column kabhi add/remove/rename mat karo; values khaali ho sakti hain, headers nahi.
 - Row types (dono ek hi table me, ek hi `#` sequence me):
-  - **Processed note row** — `Web link` = `[Watch](<youtube-url>)`, `Link to file` = `[Open notes](./notes/<filename>.md)`.
+  - **Processed note row** — `Web link` = `[Watch](<youtube-url>)`, `Link to file` = `[Open notes](../notes/<filename>.md)`.
   - **Direct link row** — `Web link` = `[Link](<web-url>)`, `Link to file` **khaali** (` | |`), kyunki koi note file generate nahi hui.
 - Nayi entry (note ya direct link) pe us topic ki table file me **sirf ek nayi row append** karo (`#` last row se +1). Existing rows ko na edit karo, na reorder.
 - Topic ki table file exist nahi karti toh nayi banao — heading + table header + row `1`.
 - **Naya topic** banaya ho toh `README.md` ke "Notes Index" table me bhi us topic ki ek row add kar do. Purana topic hai toh README ko haath mat lagao.
-- **Entry delete** karte waqt (`prompts/delete-table-row.prompt.md`): row hatao, bachi rows ko `1..N` renumber karo (order badle bina), row se linked `notes/` file bhi delete karo. Table me ek bhi row na bache toh `<topic-slug>.table.md` file delete kar do aur `README.md` ke Notes Index se us topic ki row bhi hata do.
+- **Entry delete** karte waqt (`prompts/delete-table-row.prompt.md`): row hatao, bachi rows ko `1..N` renumber karo (order badle bina), row se linked `notes/` file bhi delete karo. Table me ek bhi row na bache toh `tables/<topic-slug>.table.md` file delete kar do aur `README.md` ke Notes Index se us topic ki row bhi hata do.
 
 ## Language & Tone (MOST IMPORTANT)
 

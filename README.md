@@ -11,12 +11,12 @@
 my-notes/
 ├── notes/               # Saare tutorial notes (ek video = ek file, sab topics ek hi folder me)
 ├── prompts/             # Reusable prompts (video → notes, direct link store, entry delete)
-├── <topic>.table.md     # Per-topic index (date, title, web link, file link)
+├── tables/              # Per-topic index files — <topic>.table.md (date, title, web link, file link)
 └── CLAUDE.md            # Notes likhne ke rules (language, tone, formatting)
 ```
 
 - Notes kabhi topic-wise subfolder me nahi jaate — sab flat `notes/` me rehte hain.
-- Topic ka alag hona sirf **index file** se pata chalta hai: `system-design.table.md`, `lld.table.md`, waghairah.
+- Topic ka alag hona sirf **index file** se pata chalta hai: `tables/system-design.table.md`, `tables/lld.table.md`, waghairah.
 
 ## Notes Index
 
@@ -24,16 +24,16 @@ Har topic ka apna index file hai — usme us topic ki saari entries (date, title
 
 | Topic | Index |
 |-------|-------|
-| SYSTEM DESIGN | [system-design.table.md](./system-design.table.md) |
-| GIT | [git.table.md](./git.table.md) |
-| LLD | [lld.table.md](./lld.table.md) |
-| REACT MACHINE CODING | [react-machine-coding.table.md](./react-machine-coding.table.md) |
+| SYSTEM DESIGN | [system-design.table.md](./tables/system-design.table.md) |
+| GIT | [git.table.md](./tables/git.table.md) |
+| LLD | [lld.table.md](./tables/lld.table.md) |
+| REACT MACHINE CODING | [react-machine-coding.table.md](./tables/react-machine-coding.table.md) |
 
 Har index file me **exactly ye 5 columns** hote hain — dono tarah ki entries ek hi table me rehti hain:
 
 | # | Date | Title | Web link | Link to file |
 |---|------|-------|---------------|--------------|
-| 1 | 05 Sep 2026 | Processed note (video se bana) | [Watch](https://youtube.com/...) | [Open notes](./notes/file.md) |
+| 1 | 05 Sep 2026 | Processed note (video se bana) | [Watch](https://youtube.com/...) | [Open notes](../notes/file.md) |
 | 2 | 20 Sep 2026 | Direct link (unprocessed) | [Link](https://example.com/...) | |
 
 - Direct link wali row me `Link to file` **khaali** rehta hai, kyunki uska koi notes file nahi banti.
@@ -47,7 +47,7 @@ Har index file me **exactly ye 5 columns** hote hain — dono tarah ki entries e
    - Video ka **title aur public transcript** fetch karta hai (video download nahi hota).
    - Transcript ko clean, structured study notes me convert karta hai.
    - `notes/` folder me `<video-title>.md` file banata hai.
-   - `<topic>.table.md` me nayi row add karta hai (file na ho toh nayi bana deta hai).
+   - `tables/<topic>.table.md` me nayi row add karta hai (file na ho toh nayi bana deta hai).
    - Topic bilkul naya ho toh upar wale **Notes Index** table me bhi ek row add kar deta hai.
 
 ## Direct Web Link Kaise Store Karein?
@@ -58,7 +58,7 @@ Jab koi article/blog/doc bas **save** karna ho, notes banane ki zarurat na ho:
 2. [store-direct-link.prompt.md](./prompts/store-direct-link.prompt.md) wala prompt Claude Code me use karo — link + title + topic ke saath.
 3. Prompt automatically:
    - Link ko **fetch/process nahi karta** (zero token waste) — sirf as-is store karta hai.
-   - `<topic>.table.md` me nayi row add karta hai, `Link to file` column khaali chhod kar.
+   - `tables/<topic>.table.md` me nayi row add karta hai, `Link to file` column khaali chhod kar.
    - Duplicate URL ho toh row add nahi karta, bata deta hai.
    - Topic bilkul naya ho toh **Notes Index** table me bhi row add kar deta hai.
 
@@ -70,7 +70,7 @@ Jab koi article/blog/doc bas **save** karna ho, notes banane ki zarurat na ho:
    - Row dikha kar pehle **confirmation maangta hai** (delete destructive hai).
    - Row se linked note file `notes/` se delete karta hai (direct link row ho toh koi file nahi).
    - Table se row hata kar bachi rows ko `1..N` renumber kar deta hai.
-   - Table khaali ho jaye toh `<topic>.table.md` file aur **Notes Index** ki us topic wali row bhi hata deta hai.
+   - Table khaali ho jaye toh `tables/<topic>.table.md` file aur **Notes Index** ki us topic wali row bhi hata deta hai.
 
 ## Notes ka Format
 
