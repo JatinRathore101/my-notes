@@ -31,6 +31,90 @@ If I forget to give the **topic**, STOP and ask me for it. Do NOT guess the topi
 * Prefer YouTube's existing transcript/captions, including auto-generated captions.
 * If YouTube's transcript is inaccessible, use a free/public transcript source if available.
 * If no free transcript is available, stop and tell me rather than downloading/processing the video.
+* Title aur transcript fetch karne ka exact working tareeka neeche **HOW TO FETCH TITLE + TRANSCRIPT** section me diya hai — wahi use karo.
+
+## HOW TO FETCH TITLE + TRANSCRIPT (known-working method — try this FIRST)
+
+YouTube ab simple transcript fetching block karta hai, isliye method hunting mat karo. Ye exact steps follow karo — 20 Sep 2026 ko verified.
+
+Saara kaam **scratchpad directory** me karo (repo me koi temp file nahi jaani chahiye).
+
+### Step 1 — Video title (`videoDetails.title` se)
+
+```bash
+cd "$SCRATCHPAD"
+curl -s -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36" \
+  "https://www.youtube.com/watch?v=<VIDEO_ID>" -o page.html
+python3 - <<'PY'
+import json, re
+h = open('page.html', encoding='utf-8').read()
+m = re.search(r'"videoDetails":\{.*?"title":"(.*?)(?<!\\)"', h)
+print(json.loads('"' + m.group(1) + '"') if m else 'TITLE NOT FOUND')
+PY
+```
+
+- **Sirf `videoDetails` wala title use karo.** Page me `"title"` bahut baar aata hai — pehla match aksar `"Download unavailable"` jaisa UI string hota hai, video title nahi.
+- `json.loads` escapes (`\u0026`, `\'`) apne aap theek kar deta hai — `og:title` me HTML entities (`&#39;`) aate hain, isliye wo mat use karo.
+- Title na mile toh page HTML shayad bot-check page hai — curl dobara chalao.
+
+### Step 2 — Transcript (yt-dlp + `ios` player client)
+
+`yt-dlp` system me installed nahi hota. Scratchpad me pehle se ho toh reuse karo, warna ek baar install:
+
+```bash
+cd "$SCRATCHPAD"
+[ -d ./ytdlp ] || python3 -m pip install --quiet --target ./ytdlp yt-dlp
+```
+
+Phir **sirf subtitles** fetch karo (video download nahi hota — `--skip-download`):
+
+```bash
+PYTHONPATH=./ytdlp python3 ./ytdlp/bin/yt-dlp \
+  --extractor-args "youtube:player_client=ios" \
+  --skip-download --ignore-no-formats-error \
+  --write-auto-subs --write-subs --sub-langs "en.*" --sub-format json3 \
+  -o "cap.%(ext)s" "https://www.youtube.com/watch?v=<VIDEO_ID>"
+```
+
+- `player_client=ios` **zaroori hai** — default client fail hota hai.
+- `--ignore-no-formats-error` bhi zaroori hai, warna "Requested format is not available" pe poora command fail ho jaata hai.
+- Output files video ke hisaab se alag-alag naam le sakti hain — `cap.en.json3`, `cap.en-orig.json3`, `cap.en-US.json3`. Step 3 khud sahi file chun leta hai.
+- Kabhi-kabhi ek extra auto-translated track (`en-en-US`) pe HTTP 429 aata hai — **ignore karo**, primary file kaafi hai.
+- PO-token aur impersonation wali WARNING lines normal hain, inse subtitles pe koi farq nahi padta.
+
+### Step 3 — json3 ko plain text me convert karo
+
+```bash
+cd "$SCRATCHPAD" && python3 - <<'PY'
+import json, re, glob
+files = glob.glob('cap.*.json3')
+pref = ['cap.en.json3', 'cap.en-orig.json3', 'cap.en-US.json3']
+f = next((x for x in pref if x in files), files[0])
+d = json.load(open(f))
+ev = [e for e in d.get('events', []) if e.get('segs')]
+t = re.sub(r'\s+', ' ', ''.join(s.get('utf8','') for e in ev for s in e['segs'])).strip()
+open('transcript.txt','w').write(t)
+print('picked:', f, '|', len(t.split()), 'words | last tStartMs:', ev[-1]['tStartMs'])
+PY
+```
+
+- **Sanity check:** `tStartMs` (milliseconds) video duration ke aas-paas hona chahiye. Bahut kam ho toh transcript adhoora hai.
+- Word count bhi dekho — 4-5 min tutorial me normally 600+ words aate hain.
+- Phir `transcript.txt` padho aur usi se notes banao.
+
+> Ye poora flow ~3 second me complete ho jaata hai (yt-dlp pehle se installed ho toh). Agar 2-3 attempt se zyada lag rahe hain, matlab kuch badal gaya hai — mujhe bata do.
+
+### Ye approaches FAIL hote hain — inme time waste mat karo
+
+| Approach | Kya hota hai |
+|----------|--------------|
+| Watch page se `captionTracks` ka `baseUrl` direct curl karna | Empty response (har `fmt` variant pe) |
+| InnerTube `youtubei/v1/player` API (ANDROID client) | `captions` hi nahi aate |
+| `youtubetotranscript.com` | HTTP 403 |
+| `youtubetranscript.com` | "YouTube is currently blocking us" wala dummy XML |
+| yt-dlp default / `mweb` / `web_embedded` / `tv_embedded` client | "Video unavailable" / "page needs to be reloaded" |
+
+Agar `ios` client bhi fail ho jaaye, tab hi doosre free/public sources try karo. Kuch bhi kaam na kare toh **ruk jao aur mujhe batao** — video download/process bilkul mat karna.
 
 ## TASK
 
@@ -163,9 +247,9 @@ YouTube URL + Topic
     ↓
 Normalize topic → slug + display name
     ↓
-Fetch TITLE
+Fetch TITLE (watch page curl + grep)
     ↓
-Fetch existing PUBLIC TRANSCRIPT/CAPTIONS
+Fetch existing PUBLIC TRANSCRIPT/CAPTIONS (yt-dlp, ios player client)
     ↓
 Claude processes ONLY the transcript
     ↓
