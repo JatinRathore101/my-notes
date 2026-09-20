@@ -26,6 +26,8 @@ Har topic ka apna index file hai — usme us topic ki saari entries (date, title
 |-------|-------|
 | SYSTEM DESIGN | [system-design.table.md](./system-design.table.md) |
 | GIT | [git.table.md](./git.table.md) |
+| LLD | [lld.table.md](./lld.table.md) |
+| REACT MACHINE CODING | [react-machine-coding.table.md](./react-machine-coding.table.md) |
 
 Har index file me **exactly ye 5 columns** hote hain — dono tarah ki entries ek hi table me rehti hain:
 
