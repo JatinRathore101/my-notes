@@ -166,6 +166,7 @@ td.nowrap { white-space: nowrap; }
 .callout > :first-child { margin-top: 0; } .callout > :last-child { margin-bottom: 0; }
 .callout .callout-title { display: block; font-weight: 700; font-size: 13px; letter-spacing: .03em;
   text-transform: uppercase; margin-bottom: 4px; color: var(--info); }
+.callout.info { border-left-color: var(--info); background: var(--info-soft); }
 .callout.tip { border-left-color: var(--tip); background: var(--tip-soft); }
 .callout.tip .callout-title { color: var(--tip); }
 .callout.warn { border-left-color: var(--warn); background: var(--warn-soft); }

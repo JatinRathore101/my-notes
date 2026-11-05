@@ -97,7 +97,7 @@ my-notes/
 - Semantic HTML: `<ul>`/`<ol>` for lists, `<ol class="steps">` for processes, `<strong>` for key terms on first use, `<code>` for technical names (APIs, commands, config values).
 - Comparisons → `.table-wrap` tables or `.cards` (good/bad/accent).
 - Code/config/commands → `<div class="code" data-lang="…"><pre><code>…</code></pre></div>` (copy button is automatic). Escape `&`, `<`, `>`.
-- Diagrams → Mermaid (`<figure class="diagram"><pre class="mermaid">`) for flows, sequences, architecture, git graphs; `<pre class="ascii">` when ASCII is clearer. Load the Mermaid CDN script (`mermaid@10.9.1` from jsdelivr) only when the page has a Mermaid block.
+- Diagrams → Mermaid (`<figure class="diagram"><pre class="mermaid">`) for flows, sequences, architecture, git graphs; `<pre class="ascii">` when ASCII is clearer. No per-page Mermaid `<script>` — `notes.js` lazy-loads `mermaid@10.9.1` from jsdelivr only when the page has a `pre.mermaid`.
 - **ER diagrams** (Mermaid `erDiagram`) for DB schema/relationships — only when genuinely needed and they improve the doc (e.g. the database design section of an HLD). Do not force them into every file.
 - Callouts (`.callout tip|warn|danger|info|key`) for interview tips, gotchas, destructive operations, side notes and key takeaways.
 - Images → `assets/img/<note-name>-<n>.<ext>`, embedded with `<figure><img alt="…"><figcaption>`. Only when a visual genuinely adds information.

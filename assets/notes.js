@@ -4,7 +4,7 @@
    - Copy button on every .code block
    - Auto table of contents from h2/h3 (when an <aside class="toc"> exists)
    - Heading anchors
-   - Mermaid rendering (if the page loads mermaid) with theme-aware re-render
+   - Mermaid rendering (auto-loads the CDN when a pre.mermaid exists) with theme-aware re-render
    - Reveal-on-scroll for elements with .reveal
    ========================================================================== */
 (function () {
@@ -129,12 +129,21 @@
     renderMermaid();
   });
 
-  // ---- Mermaid ----
-  var mermaidSrc = null;
+  // ---- Mermaid (lazy-loaded from CDN only when the page has a pre.mermaid) ----
+  var MERMAID_CDN = "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js";
+  var mermaidSrc = null, mermaidLoading = false;
   function renderMermaid() {
-    if (!window.mermaid) return;
     var nodes = document.querySelectorAll("pre.mermaid");
     if (!nodes.length) return;
+    if (!window.mermaid) {
+      if (mermaidLoading) return;
+      mermaidLoading = true;
+      var s = document.createElement("script");
+      s.src = MERMAID_CDN;
+      s.onload = renderMermaid;
+      document.head.appendChild(s);
+      return;
+    }
     if (!mermaidSrc) mermaidSrc = Array.prototype.map.call(nodes, function (n) { return n.textContent; });
     nodes.forEach(function (n, i) { n.removeAttribute("data-processed"); n.innerHTML = ""; n.textContent = mermaidSrc[i]; });
     window.mermaid.initialize({ startOnLoad: false, theme: isDark() ? "dark" : "default", securityLevel: "strict",

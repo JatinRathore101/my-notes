@@ -12,7 +12,7 @@
     {{VIDEO_TITLE}}    video title as link text
     {{DATE}}           DD MMM YYYY
 
-  Mermaid: keep the mermaid <script> only if the page contains a <pre class="mermaid">.
+  Mermaid: no script tag needed — notes.js auto-loads Mermaid when a <pre class="mermaid"> exists.
   Mermaid source must start at column 0 inside <pre class="mermaid"> and must not be
   HTML-escaped except for & < > which must be written as &amp; &lt; &gt;.
 
@@ -48,7 +48,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{TITLE}}</title>
   <link rel="stylesheet" href="../assets/notes.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
   <script defer src="../assets/notes.js"></script>
 </head>
 <body>

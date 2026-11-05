@@ -194,7 +194,7 @@ System-Design-Tutorial---Load-Balancing-Explained.html
   * `{{VIDEO_URL}}` — YouTube URL.
   * `{{DATE}}` — today's date in `DD MMM YYYY` format.
 * The header (`<header class="note-header">` with H1 + Topic / Video / Date meta pills) must always be present; content starts only after it.
-* Keep the Mermaid `<script>` tag only if the page contains a `<pre class="mermaid">`. Mermaid source starts at column 0 and escapes `&`, `<`, `>` as entities.
+* Do not add a Mermaid `<script>` tag — `notes.js` auto-loads Mermaid when the page contains a `<pre class="mermaid">`. Mermaid source starts at column 0 and escapes `&`, `<`, `>` as entities.
 * Escape `&`, `<`, `>` inside all code blocks and ASCII diagrams.
 * Adapt the sections to the actual content. Do not force unnecessary sections.
 * **Validate** before finishing: tag balance (e.g. a quick Python `html.parser` check) and no leaked markdown syntax (```` ``` ````, `**`, `|---|`).
