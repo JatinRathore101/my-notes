@@ -16,7 +16,7 @@ If I forget to give the **topic**, STOP and ask me for it. Do NOT guess the topi
 * **Slug** = lowercase, non-alphanumeric chars replaced with `-`, repeated `-` collapsed, leading/trailing `-` removed.
   * `System Design` / `system_design` / `System-Design` → all become `system-design`.
   * Slug is used for the index filename: `tables/<topic-slug>.table.md`.
-* **Display name** = slug ke saare non-alphanumeric chars ko space se replace karo, poora UPPERCASE.
+* **Display name** = slug with all non-alphanumeric chars replaced by a space, fully UPPERCASE.
   * `system-design` → `SYSTEM DESIGN`, `lld` → `LLD`.
   * Display name is used inside the note header, as the index file's H1 heading, and in the `Topic` column of `topics.md`.
 
@@ -31,15 +31,15 @@ If I forget to give the **topic**, STOP and ask me for it. Do NOT guess the topi
 * Prefer YouTube's existing transcript/captions, including auto-generated captions.
 * If YouTube's transcript is inaccessible, use a free/public transcript source if available.
 * If no free transcript is available, stop and tell me rather than downloading/processing the video.
-* Title aur transcript fetch karne ka exact working tareeka neeche **HOW TO FETCH TITLE + TRANSCRIPT** section me diya hai — wahi use karo.
+* The exact working method to fetch the title and transcript is in the **HOW TO FETCH TITLE + TRANSCRIPT** section below — use that.
 
 ## HOW TO FETCH TITLE + TRANSCRIPT (known-working method — try this FIRST)
 
-YouTube ab simple transcript fetching block karta hai, isliye method hunting mat karo. Ye exact steps follow karo — 20 Sep 2026 ko verified.
+YouTube now blocks simple transcript fetching, so do not hunt for alternative methods. Follow these exact steps — verified on 20 Sep 2026.
 
-Saara kaam **scratchpad directory** me karo (repo me koi temp file nahi jaani chahiye). Neeche `$SCRATCHPAD` = session ki scratchpad directory ka path (system prompt me diya hota hai) — use apne path se replace karo.
+Do all work inside the **scratchpad directory** (no temp files may land in the repo). Below, `$SCRATCHPAD` = the session's scratchpad directory path (given in the system prompt) — replace it with your actual path.
 
-### Step 1 — Video title (`videoDetails.title` se)
+### Step 1 — Video title (from `videoDetails.title`)
 
 ```bash
 cd "$SCRATCHPAD"
@@ -53,20 +53,20 @@ print(json.loads('"' + m.group(1) + '"') if m else 'TITLE NOT FOUND')
 PY
 ```
 
-- **Sirf `videoDetails` wala title use karo.** Page me `"title"` bahut baar aata hai — pehla match aksar `"Download unavailable"` jaisa UI string hota hai, video title nahi.
-- `json.loads` escapes (`\u0026`, `\'`) apne aap theek kar deta hai — `og:title` me HTML entities (`&#39;`) aate hain, isliye wo mat use karo.
-- Title na mile toh page HTML shayad bot-check page hai — curl dobara chalao.
+- **Use only the `videoDetails` title.** `"title"` appears many times in the page — the first match is often a UI string like `"Download unavailable"`, not the video title.
+- `json.loads` resolves escapes (`&`, `\'`) automatically — `og:title` contains HTML entities (`&#39;`), so do not use it.
+- If the title is not found, the page HTML is probably a bot-check page — re-run the curl.
 
 ### Step 2 — Transcript (yt-dlp + `ios` player client)
 
-`yt-dlp` system me installed nahi hota. Scratchpad me pehle se ho toh reuse karo, warna ek baar install:
+`yt-dlp` is not installed system-wide. Reuse it if it already exists in the scratchpad, otherwise install it once:
 
 ```bash
 cd "$SCRATCHPAD"
 [ -d ./ytdlp ] || python3 -m pip install --quiet --target ./ytdlp yt-dlp
 ```
 
-Phir **sirf subtitles** fetch karo (video download nahi hota — `--skip-download`):
+Then fetch **subtitles only** (the video is not downloaded — `--skip-download`):
 
 ```bash
 PYTHONPATH=./ytdlp python3 ./ytdlp/bin/yt-dlp \
@@ -76,13 +76,13 @@ PYTHONPATH=./ytdlp python3 ./ytdlp/bin/yt-dlp \
   -o "cap.%(ext)s" "https://www.youtube.com/watch?v=<VIDEO_ID>"
 ```
 
-- `player_client=ios` **zaroori hai** — default client fail hota hai.
-- `--ignore-no-formats-error` bhi zaroori hai, warna "Requested format is not available" pe poora command fail ho jaata hai.
-- Output files video ke hisaab se alag-alag naam le sakti hain — `cap.en.json3`, `cap.en-orig.json3`, `cap.en-US.json3`. Step 3 khud sahi file chun leta hai.
-- Kabhi-kabhi ek extra auto-translated track (`en-en-US`) pe HTTP 429 aata hai — **ignore karo**, primary file kaafi hai.
-- PO-token aur impersonation wali WARNING lines normal hain, inse subtitles pe koi farq nahi padta.
+- `player_client=ios` is **required** — the default client fails.
+- `--ignore-no-formats-error` is also required, otherwise the whole command fails on "Requested format is not available".
+- Output filenames vary per video — `cap.en.json3`, `cap.en-orig.json3`, `cap.en-US.json3`. Step 3 picks the correct file automatically.
+- An extra auto-translated track (`en-en-US`) occasionally returns HTTP 429 — **ignore it**, the primary file is sufficient.
+- PO-token and impersonation WARNING lines are expected and do not affect the subtitles.
 
-### Step 3 — json3 ko plain text me convert karo
+### Step 3 — Convert json3 to plain text
 
 ```bash
 cd "$SCRATCHPAD" && python3 - <<'PY'
@@ -98,23 +98,23 @@ print('picked:', f, '|', len(t.split()), 'words | last tStartMs:', ev[-1]['tStar
 PY
 ```
 
-- **Sanity check:** `tStartMs` (milliseconds) video duration ke aas-paas hona chahiye. Bahut kam ho toh transcript adhoora hai.
-- Word count bhi dekho — 4-5 min tutorial me normally 600+ words aate hain.
-- Phir `transcript.txt` padho aur usi se notes banao.
+- **Sanity check:** `tStartMs` (milliseconds) should be close to the video duration. If it is much lower, the transcript is incomplete.
+- Also check the word count — a 4-5 min tutorial normally yields 600+ words.
+- Then read `transcript.txt` and build the notes from it.
 
-> Ye poora flow ~3 second me complete ho jaata hai (yt-dlp pehle se installed ho toh). Agar 2-3 attempt se zyada lag rahe hain, matlab kuch badal gaya hai — mujhe bata do.
+> This whole flow completes in ~3 seconds (with yt-dlp already installed). If it takes more than 2-3 attempts, something has changed — tell me.
 
-### Ye approaches FAIL hote hain — inme time waste mat karo
+### These approaches FAIL — do not waste time on them
 
-| Approach | Kya hota hai |
-|----------|--------------|
-| Watch page se `captionTracks` ka `baseUrl` direct curl karna | Empty response (har `fmt` variant pe) |
-| InnerTube `youtubei/v1/player` API (ANDROID client) | `captions` hi nahi aate |
+| Approach | Result |
+|----------|--------|
+| Curling the `captionTracks` `baseUrl` from the watch page directly | Empty response (for every `fmt` variant) |
+| InnerTube `youtubei/v1/player` API (ANDROID client) | No `captions` returned |
 | `youtubetotranscript.com` | HTTP 403 |
-| `youtubetranscript.com` | "YouTube is currently blocking us" wala dummy XML |
+| `youtubetranscript.com` | Dummy XML saying "YouTube is currently blocking us" |
 | yt-dlp default / `mweb` / `web_embedded` / `tv_embedded` client | "Video unavailable" / "page needs to be reloaded" |
 
-Agar `ios` client bhi fail ho jaaye, tab hi doosre free/public sources try karo. Kuch bhi kaam na kare toh **ruk jao aur mujhe batao** — video download/process bilkul mat karna.
+Only if the `ios` client also fails, try other free/public sources. If nothing works, **stop and tell me** — never download/process the video.
 
 ## TASK
 
@@ -154,7 +154,7 @@ Use:
 * Time/space complexity where relevant
 * Pros/cons and trade-offs where relevant
 
-Keep the writing **concise but sufficiently explanatory**.
+Keep the writing **concise but sufficiently explanatory**, in precise technical English (see `CLAUDE.md`).
 
 Do not add large amounts of information that was not covered in the transcript. You may add a small clarification when necessary to make an explanation technically correct or understandable, but clearly prioritize the content of the tutorial.
 
@@ -195,7 +195,7 @@ The file must start with an H1 title followed by this exact header block:
 - `Topic` — the topic **display name** (UPPERCASE form, see INPUTS above).
 - `Video` — exact video title as link text, YouTube URL as target.
 - `Date` — today's date in `DD MMM YYYY` format.
-- Header block ke baad hi content start ho.
+- Content starts only after the header block.
 - Adapt the rest of the structure to the actual content. Do not force unnecessary sections.
 
 ## UPDATE THE TOPIC INDEX (`tables/<topic-slug>.table.md`)
@@ -204,11 +204,11 @@ After creating the notes file, you MUST record it in that topic's index file ins
 
 1. Look for `tables/<topic-slug>.table.md` (e.g. `tables/system-design.table.md`).
 2. **If it exists** — append ONE new row at the end of the table:
-   * `#` — last row ka serial number +1.
+   * `#` — last row's serial number + 1.
    * `Date` — same date as in the notes file (`DD MMM YYYY`).
-   * `Title` — the exact video title. Title me `|` ho toh `\|` likho, taaki table na tootay.
+   * `Title` — the exact video title. Escape any `|` as `\|` so the table does not break.
    * `Web link` — `[Watch](<youtube-url>)`.
-   * `Link to file` — clickable relative link, e.g. `[Open notes](../notes/<filename>.md)`. Path `tables/` folder ke relative hai, isliye `../notes/` (NOT `./notes/`).
+   * `Link to file` — clickable relative link, e.g. `[Open notes](../notes/<filename>.md)`. The path is relative to the `tables/` folder, hence `../notes/` (NOT `./notes/`).
    * Do NOT modify, reorder, or renumber existing rows — only append.
 3. **If it does not exist** — create it with the topic display name as H1, the table header, and this note as row `1`:
 
@@ -222,20 +222,20 @@ After creating the notes file, you MUST record it in that topic's index file ins
 
 * Index files always live inside `tables/`, never at the repo root or inside `notes/`.
 * Never create a new index file for a topic that already has one — check first.
-* **Duplicate check:** row add karne se pehle dekho ki same YouTube URL us table me pehle se toh nahi hai. Ho toh notes file mat banao, STOP karo aur mujhe batao ki row `#N` pe already hai.
-* Ek hi table me **direct (unprocessed) web link** wali rows bhi ho sakti hain — unka `Web link` `[Link](...)` hota hai aur `Link to file` khaali hota hai (dekho [store-direct-link.prompt.md](./store-direct-link.prompt.md)).
-  * Serial number `#` dono tarah ki rows ko milakar ek hi sequence me chalta hai — last row ka number +1 lo, chahe wo direct-link row ho.
-  * Un rows ko na chhedo, na renumber karo. Columns hamesha `# | Date | Title | Web link | Link to file` hi rahenge.
+* **Duplicate check:** before adding the row, check whether the same YouTube URL already exists in that table. If it does, do not create the notes file — STOP and tell me it already exists at row `#N`.
+* The same table may also contain **direct (unprocessed) web link** rows — their `Web link` is `[Link](...)` and `Link to file` is empty (see [store-direct-link.prompt.md](./store-direct-link.prompt.md)).
+  * The `#` serial number runs as a single sequence across both row types — take the last row's number + 1, even if it is a direct-link row.
+  * Do not modify or renumber those rows. Columns always remain `# | Date | Title | Web link | Link to file`.
 
 ## UPDATE `topics.md` (only for a brand-new topic)
 
 * `topics.md` (repo root) is the table of contents of all topics — columns `# | Topic | Link to table`, one row per file in `tables/`.
 * If you had to **create** the `tables/<topic-slug>.table.md` file (i.e. this is the repo's first note for that topic), append ONE row at the end of `topics.md`:
-  * `#` — last row +1.
+  * `#` — last row + 1.
   * `Topic` — the topic display name (UPPERCASE).
   * `Link to table` — `[<topic-slug>.table.md](./tables/<topic-slug>.table.md)`.
 
-  Example (illustrative — apna `#`, display name aur slug use karo):
+  Example (illustrative — use your own `#`, display name and slug):
 
   ```markdown
   | 5 | DBMS | [dbms.table.md](./tables/dbms.table.md) |
@@ -272,7 +272,7 @@ If topic was new → append row to topics.md
 
 **Never use the video itself as input to Claude.**
 
-**Git commands bilkul mat chalao** — na `git add`, na commit, na stage/unstage. Main khud karunga.
+**Never run git commands** — no `git add`, no commit, no stage/unstage. I handle git manually.
 
 Do not unnecessarily reproduce the raw transcript in the conversation. The final `.md` file should contain the **cleaned study material/notes**, not the raw transcript.
 

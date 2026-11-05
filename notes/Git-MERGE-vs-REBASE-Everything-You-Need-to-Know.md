@@ -4,20 +4,20 @@
 - **Video:** [Git MERGE vs REBASE: Everything You Need to Know](https://www.youtube.com/watch?v=0chZFIZLR_0)
 - **Date:** 20 Sep 2026
 
-## Kya hai ye? (What & Why)
+## What & Why
 
-- Multiple branches wale project me do sawal baar baar aate hain:
-  1. Feature branch ko **main ke saath up-to-date** kaise rakhein?
-  2. Feature ready hone ke baad usse **main me wapas kaise laayein**?
-- Dono sawalon ke teen jawab hain — `git merge`, `git rebase`, aur **squash commits**.
-- Teeno ka kaam same hai (changes combine karna), farq sirf **commit history kaisi dikhegi** uska hai.
+- In a project with multiple branches, two questions keep coming up:
+  1. How do you keep a feature branch **up to date with main**?
+  2. Once the feature is ready, how do you **bring it back into main**?
+- Both questions have three answers — `git merge`, `git rebase`, and **squash commits**.
+- All three do the same job (combine changes); the only difference is **what the commit history looks like**.
 
 ## Setup — Example Scenario
 
-- `main` se ek naya **feature branch** banaya.
-- Feature branch pe commits **A, B, C** add hue.
-- Usi time `main` pe commits **D, E** add ho gaye.
-- Soch lo ek ped ki do shaakhein alag-alag direction me badh rahi hain.
+- A new **feature branch** is created from `main`.
+- Commits **A, B, C** are added on the feature branch.
+- Meanwhile, commits **D, E** are added on `main`.
+- Think of two branches of a tree growing in different directions.
 
 ```text
 main:     ... ──● ──● D ──● E
@@ -25,50 +25,50 @@ main:     ... ──● ──● D ──● E
 feature:          ● A ──● B ──● C
 ```
 
-## Part 1 — Feature branch ko main ke saath sync karna
+## Part 1 — Syncing the feature branch with main
 
-| Command | Kya karta hai | History kaisi dikhti hai |
+| Command | What it does | What the history looks like |
 |---------|---------------|--------------------------|
-| `git merge` | `main` ke latest changes feature branch me kheench laata hai, aur ek naya **merge commit** banata hai | Do branches ko ek **knot** (gaanth) se baandh diya — history me extra commit dikhta hai |
-| `git rebase` | Feature branch ka **base badal deta hai** — main ke latest commit pe le jaata hai, phir apne commits (A, B, C) uske upar dobara **replay** karta hai | Clean, seedhi (linear) history — koi extra merge commit nahi |
+| `git merge` | Pulls `main`'s latest changes into the feature branch and creates a new **merge commit** | The two branches are tied together with a **knot** — an extra commit appears in history |
+| `git rebase` | **Changes the base** of the feature branch — moves it to main's latest commit, then **replays** its own commits (A, B, C) on top | Clean, straight (linear) history — no extra merge commit |
 
-- Rebase ke baad A, B, C technically **naye commits** ban jaate hain (base badal gaya, isliye replay hua).
-- Bahut log rebase prefer karte hain kyunki history straightforward rehti hai.
+- After a rebase, A, B, C are technically **new commits** (the base changed, so they were replayed).
+- Many people prefer rebase because the history stays straightforward.
 
-## Part 2 — Feature ko wapas main me laana (3 options)
+## Part 2 — Bringing the feature back into main (3 options)
 
 ### 1. Git Merge
 
-- Git ek naya **merge commit** banata hai jo dono branches ki history ko jodta hai.
-- Rope me ek gaanth jaisa — clearly dikhta hai ki branches kahan mili.
-- ❌ Baar-baar aisa karo toh bahut saari gaanthein ban jaati hain → history messy ho jaati hai.
+- Git creates a new **merge commit** that joins the histories of both branches.
+- Like a knot in a rope — it clearly shows where the branches met.
+- ❌ Do this repeatedly and many knots accumulate → history becomes messy.
 
 ### 2. Git Rebase + Fast-Forward Merge
 
-- Pehle `git rebase` se feature branch ke changes ko **main ke tip pe** move karo.
-- Phir **fast-forward merge** kar do (koi merge commit nahi banta).
-- Rope ko seedha kheench ke ek hi line me kar diya — poori history **linear**.
+- First, use `git rebase` to move the feature branch's changes onto **the tip of main**.
+- Then do a **fast-forward merge** (no merge commit is created).
+- The rope is pulled straight into a single line — the entire history is **linear**.
 
 ### 3. Squash Commits
 
-- Feature branch ke **saare commits dab ke ek single commit** ban jaate hain, jo main me merge hota hai.
-- Main ki history linear rehti hai (rebase jaisi), saath me ek single merge commit bhi banta hai.
-- ❌ Main ki history me individual feature commits ki **fine details khatam** ho jaati hain.
-- ✅ GitHub jaise platforms pe ye popular strategy hai — main saaf rehta hai, aur **detailed commit history feature branch me preserve** rehti hai.
-- Isliye ise **hybrid approach** bolte hain.
+- **All commits of the feature branch are squashed into a single commit**, which is merged into main.
+- Main's history stays linear (like rebase), and a single merge commit is also created.
+- ❌ The **fine-grained details** of individual feature commits are **lost** from main's history.
+- ✅ A popular strategy on platforms like GitHub — main stays clean, and the **detailed commit history is preserved on the feature branch**.
+- That is why it is called a **hybrid approach**.
 
 ## Summary Table
 
-| Strategy | Main branch ki history | Detail preserve hoti hai? | Kab use karein |
+| Strategy | Main branch history | Is detail preserved? | When to use |
 |----------|------------------------|---------------------------|----------------|
-| `git merge` | Merge commits ke saath, branch evolution poora dikhta hai | ✅ Haan, poori | Jab team ko **complete picture** chahiye — kaun si branch kab mili |
-| `git rebase` (+ FF merge) | Bilkul linear, saaf | ✅ Individual commits rehte hain (naye hashes ke saath) | Jab **clean, linear history** chahiye |
-| Squash commits | Linear, ek feature = ek commit | ❌ Main me nahi (feature branch me rehti hai) | Jab clean history chahiye aur main me granular commits ki parwah nahi |
+| `git merge` | With merge commits; full branch evolution is visible | ✅ Yes, fully | When the team needs the **complete picture** — which branch joined when |
+| `git rebase` (+ FF merge) | Fully linear, clean | ✅ Individual commits remain (with new hashes) | When a **clean, linear history** is needed |
+| Squash commits | Linear, one feature = one commit | ❌ Not in main (remains on the feature branch) | When clean history is needed and granular commits in main do not matter |
 
-## Kab kya choose karein
+## What to choose when
 
-- Team ko **branch evolution ka complete picture** chahiye → `git merge`.
-- Team ko **tidy, linear history** chahiye → `git rebase`.
-- Team clean history chahti hai aur main me individual commits ka detail khone se dikkat nahi → **squash**.
+- Team needs the **complete picture of branch evolution** → `git merge`.
+- Team needs a **tidy, linear history** → `git rebase`.
+- Team wants clean history and is fine losing individual commit detail in main → **squash**.
 
-> Koi **one-size-fits-all** answer nahi hai. Pros-cons tolo aur decide karo ki team ke liye kaunsa workflow sabse zyada sense banata hai.
+> There is no **one-size-fits-all** answer. Weigh the pros and cons and decide which workflow makes the most sense for the team.

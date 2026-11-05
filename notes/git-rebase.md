@@ -5,12 +5,12 @@
 
 > Related: [Merge](./git-merge.md), [Squash](./git-squash.md), [Reset/Revert](./git-reset-revert-reapply.md), [Cherry-pick](./git-cherry-pick.md).
 
-## Kya hai
+## What it is
 
-- Branch ka **base badalna** — apne commits naye base ke upar **replay** karna.
+- **Changing a branch's base** — **replaying** your commits on top of a new base.
 
 ```text
-Before:                 After (git rebase main, feature pe):
+Before:                 After (git rebase main, on feature):
              D ── E     feature
             /
 A ── B ── C                       A ── B ── C ── F ── D' ── E'
@@ -18,26 +18,26 @@ A ── B ── C                       A ── B ── C ── F ── D'
              F          main                  main      feature
 ```
 
-- `D ≠ D'`, `E ≠ E'` — naye commits. Parent hash ka part hai; parent `C → F` badla → hash badla.
-- Rebase = **history rewrite**, "merge bina merge commit" nahi.
+- `D ≠ D'`, `E ≠ E'` — new commits. The parent is part of the hash; parent changed `C → F` → hash changed.
+- Rebase = **history rewrite**, not "merge without a merge commit".
 
-## Doubt — Direction kaunsi sahi?
+## Doubt — Which direction is correct?
 
 ```bash
 git checkout feature
 git rebase main
 ```
 
-> **Rule:** Jis branch ke commits move karne hain us pe checkout karo; `rebase <naya base>`. `git rebase main` = "**current branch** ko main ke upar rebase karo", main modify **nahi** hota.
+> **Rule:** Check out the branch whose commits you want to move; then `rebase <new base>`. `git rebase main` = "rebase the **current branch** onto main"; main is **not** modified.
 
-| | Command | Modify hoti hai |
+| | Command | Gets modified |
 |---|---|---|
 | Merge | `checkout main` → `merge feature` | **main** (checkout TARGET, merge SOURCE) |
 | Rebase | `checkout feature` → `rebase main` | **feature** (checkout SOURCE, rebase TARGET) |
 
 - Shortcut: **Rebase FROM → TO** = `git checkout FROM` → `git rebase TO`.
 
-### Galat direction ka result
+### Result of the wrong direction
 
 ```bash
 git checkout main
@@ -50,13 +50,13 @@ A ── B ── C ── D ── E ── F'
                         main
 ```
 
-- Main ke unique commits feature ke upar replay → main **feature pe depend**, shared history rewrite. Ulta result.
+- Main's unique commits are replayed on top of feature → main **now depends on feature**, shared history is rewritten. Opposite of the intended result.
 
-## Doubt — Rebase ke baad kaam main me kaise aayega?
+## Doubt — After rebase, how does the work get into main?
 
-- **Rebase khud main me kuch nahi daalta**; sirf feature ko tayyar karta hai. Do steps:
+- **Rebase by itself puts nothing into main**; it only prepares feature. Two steps:
 
-### Step 1 — Rebase (feature move hoti hai)
+### Step 1 — Rebase (feature moves)
 
 ```bash
 git checkout feature
@@ -66,10 +66,10 @@ git rebase main
 ```text
 A ── B ── C ── F ── D' ── E'
                ↑          ↑
-              main      feature      ← main hila nahi
+              main      feature      ← main did not move
 ```
 
-### Step 2 — Fast-forward merge (main move hoti hai)
+### Step 2 — Fast-forward merge (main moves)
 
 ```bash
 git checkout main
@@ -82,65 +82,65 @@ A ── B ── C ── F ── D' ── E'
                      main, feature
 ```
 
-- Bina rebase seedha merge karte toh:
+- Merging directly without rebase would give:
 
 ```text
              D ── E
             /      \
-A ── B ── C ── F ── M          ← merge commit ke saath, non-linear
+A ── B ── C ── F ── M          ← with a merge commit, non-linear
 ```
 
-> **Rebase = feature kahan baithegi; Merge = main kahan baithegi.** Rebase pe ruk gaye toh kaam main me nahi.
+> **Rebase = where feature sits; Merge = where main sits.** If you stop after rebase, the work is not in main.
 
-## Standard workflow (remote ke saath)
+## Standard workflow (with remote)
 
 ```bash
-# feature pe kaam kar rahe ho
+# working on feature
 git checkout feature
 
-# remote ki latest info lao
+# fetch the latest info from remote
 git fetch origin
 
-# apna kaam latest main ke upar rakho
+# put your work on top of the latest main
 git rebase origin/main
 
-# conflict aaye toh
+# if there is a conflict
 git add .
 git rebase --continue
 
-# rebased branch push karo (history rewrite hui hai, isliye force chahiye)
+# push the rebased branch (history was rewritten, so force is required)
 git push --force-with-lease
 ```
 
 ```bash
 git checkout main
-git merge feature        # main dobara nahi hila toh fast-forward
+git merge feature        # fast-forward if main has not moved again
 git push origin main
 ```
 
-- `--force-with-lease`: remote pe beech me kisi ne push kiya ho toh fail hota hai — unka kaam overwrite nahi hota. Plain `--force` se safer.
+- `--force-with-lease`: fails if someone pushed to the remote in the meantime — their work is not overwritten. Safer than plain `--force`.
 
 ## Conflict handling
 
 ```bash
-git status                  # kaunsi files conflicted
-# files fix karo
+git status                  # which files are conflicted
+# fix the files
 git add <files>
-git rebase --continue       # next commit replay karo
+git rebase --continue       # replay the next commit
 ```
 
-| Command | Kaam |
+| Command | Purpose |
 |---|---|
-| `git rebase --continue` | Fix karke aage badho |
-| `git rebase --abort` | Cancel, rebase se pehle wali state |
-| `git rebase --skip` | Current commit skip |
+| `git rebase --continue` | Fix and move on |
+| `git rebase --abort` | Cancel, back to the pre-rebase state |
+| `git rebase --skip` | Skip the current commit |
 
 - Merge conflict: `git add` → `git commit`. Rebase conflict: `git add` → `git rebase --continue`.
 
-### Rebase me conflicts baar-baar kyun aa sakte hain?
+### Why can conflicts repeat during a rebase?
 
-- **Merge** = ek hi three-way merge (base vs main tip vs feature tip) → conflict aaya toh **max ek baar** resolve, ek merge commit.
-- **Rebase** = feature ke commits **ek-ek karke** naye base pe replay hote hain → **har commit** apna alag mini-merge hai.
+- **Merge** = a single three-way merge (base vs main tip vs feature tip) → if a conflict occurs, it is resolved **at most once**, in one merge commit.
+- **Rebase** = feature's commits are replayed onto the new base **one by one** → **each commit** is its own mini-merge.
 
 ```text
 A ── B ── C ── F          main
@@ -151,8 +151,8 @@ Rebase:  F + D  → conflict?  resolve → D'
          D' + E → conflict?  resolve → E'
 ```
 
-- Agar `D` aur `E` dono ne wahi line chhui jo `F` ne badli, toh `D` replay pe conflict, phir `E` replay pe **dobara** conflict → `--continue` har baar.
-- Isliye 10 commits wali branch pe rebase me 10 baar `add` + `--continue` ka cycle chal sakta hai; merge me wahi sab ek baar me nipat jaata.
+- If both `D` and `E` touched the same line that `F` changed, there is a conflict on replaying `D`, then **again** on replaying `E` → `--continue` each time.
+- So a rebase of a 10-commit branch can run the `add` + `--continue` cycle 10 times; a merge would settle it all in one go.
 
 ## `git pull --rebase`
 
@@ -163,9 +163,9 @@ Plain git pull (merge):          git pull --rebase:
 A ── B ── C ── M
 ```
 
-- Personal feature branches pe prefer — bekaar merge commits nahi bante.
+- Preferred on personal feature branches — no useless merge commits are created.
 
-## Kyun prefer hota hai
+## Why it is preferred
 
 ```text
       /───●──●───\
@@ -174,34 +174,34 @@ A ── B ── C ── M
           \────●────────────●
 ```
 
-- Hazaar merges ke baad aisa graph vs `A ── B ── C ── D ── E ── F' ── G' ── H'`.
-- `git log`, `git bisect`, debugging easy. Par inherently "better" nahi — workflow choice.
+- A graph like this after a thousand merges vs `A ── B ── C ── D ── E ── F' ── G' ── H'`.
+- `git log`, `git bisect`, and debugging become easier. But it is not inherently "better" — it is a workflow choice.
 
-## Danger — shared history rewrite
+## Danger — rewriting shared history
 
-- Tumne `D` push kiya, teammate ne pull kiya; tumne rebase kiya → tum `D'`, wo `D`. Code same, Git ke liye alag → sync painful.
+- You pushed `D`, a teammate pulled it; you rebased → you have `D'`, they have `D`. Same code, but different to Git → painful to sync.
 
-> **Golden rule:** Jo commits doosre use kar rahe hain (main, release, shared feature) unhe rebase mat karo.
+> **Golden rule:** Do not rebase commits that others are using (main, release, shared feature).
 
 ## Rebase vs Reset
 
 | | Reset | Rebase |
 |---|---|---|
-| Kaam | Branch pointer move | Commits naye base pe recreate |
-| Naye commits? | Nahi | Haan (`D'`, `E'`) |
+| Purpose | Move branch pointer | Recreate commits on a new base |
+| New commits? | No | Yes (`D'`, `E'`) |
 
 ## Interactive rebase
 
 ```bash
-git rebase -i B     # B ke baad ke saare commits ki list khulegi
+git rebase -i B     # opens a list of all commits after B
 ```
 
-- `pick` / `squash` / `reword` / `drop` — push se pehle local cleanup.
+- `pick` / `squash` / `reword` / `drop` — local cleanup before pushing.
 
 ## Interview lines
 
-- **Why rebase:** clean linear history, unnecessary merge commits avoid. Private branches pe; shared pe careful (history rewrite).
-- **Feature main se peeche hai:**
+- **Why rebase:** clean linear history, avoids unnecessary merge commits. Use on private branches; be careful on shared ones (history rewrite).
+- **Feature is behind main:**
 
 ```bash
 git checkout feature
@@ -212,4 +212,4 @@ git checkout main
 git merge feature      # usually fast-forward
 ```
 
-- **Kaunsi branch rewrite hoti hai:** current (checked out); `rebase` ke baad ka naam = naya base.
+- **Which branch is rewritten:** the current (checked-out) one; the name after `rebase` = the new base.

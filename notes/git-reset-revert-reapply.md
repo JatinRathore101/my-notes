@@ -5,110 +5,110 @@
 
 > Related: [Merge](./git-merge.md), [Rebase](./git-rebase.md), [Squash](./git-squash.md), [Cherry-pick](./git-cherry-pick.md).
 
-## Git 3 cheezein badal sakta hai
+## Git can change 3 things
 
 ```text
-1. Commit history            (graph me kya commits hain)
-2. Branch pointer / HEAD     (meri branch kis commit pe hai)
-3. Staging area + Working directory   (meri actual files aur staged changes)
+1. Commit history            (which commits are in the graph)
+2. Branch pointer / HEAD     (which commit my branch points to)
+3. Staging area + Working directory   (my actual files and staged changes)
 ```
 
 ```text
-Working Directory      ← tumhari actual files
+Working Directory      ← your actual files
        ↓ git add
-Staging Area (INDEX)   ← next commit me kya jaayega
+Staging Area (INDEX)   ← what goes into the next commit
        ↓ git commit
 Commit History         ← permanent record
 ```
 
-- Har command ke liye socho: teeno me se kya badla?
+- For each command, ask: which of the three changed?
 
-## `git revert` — undo commit banao
+## `git revert` — create an undo commit
 
 ```text
-A ── B ── C ── D          C me bug hai
+A ── B ── C ── D          C has a bug
               ↑
              main
 
 git revert C
 
-A ── B ── C ── D ── R     R = C ka ulta (C ke changes reverse)
+A ── B ── C ── D ── R     R = inverse of C (reverses C's changes)
                     ↑
                    main
 ```
 
-- `C` exist karta rehta hai; history rewrite nahi → **shared branches pe safe**.
-- Shared main pe `reset --hard B` mat karo (sabki history tootegi); `revert C` karo → sab `R` pull kar lenge.
+- `C` continues to exist; no history rewrite → **safe on shared branches**.
+- Do not `reset --hard B` on shared main (breaks everyone's history); do `revert C` → everyone pulls `R`.
 
-### Merge commit revert
+### Reverting a merge commit
 
 ```bash
-git revert -m 1 M      # parent 1 = jis branch pe merge kiya tha (main side)
+git revert -m 1 M      # parent 1 = the branch that was merged into (main side)
 ```
 
-- 2 parents → mainline batana padta hai; us parent ke relative merge ke changes reverse hote hain.
+- 2 parents → you must specify the mainline; the merge's changes are reversed relative to that parent.
 
-## `git reset` — branch pointer move karo
+## `git reset` — move the branch pointer
 
 ```text
 A ── B ── C ── D          git reset B
               ↑
              main
 
-A ── B                    main peeche gaya
+A ── B                    main moved back
      ↑
     main
-     C ── D               (ab main se unreachable)
+     C ── D               (now unreachable from main)
 ```
 
-- Local history rewrite. Mode decide karta hai **staging + working dir** ka kya hoga.
+- Rewrites local history. The mode decides what happens to **staging + working dir**.
 
-### `--soft` — pointer move, changes staged
+### `--soft` — move pointer, changes staged
 
 ```bash
 git reset --soft B
 ```
 
 ```text
-A ── B ── C ── D     "C aur D ek commit hona chahiye tha"
+A ── B ── C ── D     "C and D should have been one commit"
 
-git reset --soft B   → pointer B pe, C+D changes STAGED
+git reset --soft B   → pointer at B, C+D changes STAGED
 git commit -m "Implement feature"
 
 A ── B ── X          C+D replaced by X
 ```
 
 ```bash
-git reset --soft HEAD~1     # last commit me file bhool gaye
+git reset --soft HEAD~1     # forgot a file in the last commit
 git add forgotten_file
-git commit                  # corrected C' banta hai
+git commit                  # creates corrected C'
 ```
 
-### `--mixed` (default) — pointer move, changes unstaged
+### `--mixed` (default) — move pointer, changes unstaged
 
 ```text
 Commit history:     B
 Staging area:       empty
-Working directory:  C + D ke changes
+Working directory:  changes from C + D
 ```
 
-- Ab selectively `git add <files>` karke naye commits banao.
+- Now selectively `git add <files>` and create new commits.
 
-### `--hard` — pointer move, changes discard
+### `--hard` — move pointer, discard changes
 
 ```bash
 git reset --hard B
 ```
 
-- Staging + working dir bhi `B` jaisi. `C, D` ke changes aur uncommitted kaam **gaya**.
+- Staging + working dir also match `B`. Changes from `C, D` and uncommitted work are **gone**.
 
 ### Table
 
 | Command | Branch pointer | Staging (INDEX) | Working files |
 |---|---|---|---|
-| `reset --soft B` | `B` pe | **kept** (staged) | kept |
-| `reset --mixed B` | `B` pe | **reset** (unstaged) | kept |
-| `reset --hard B` | `B` pe | **reset** | **reset** (changes gaye) |
+| `reset --soft B` | at `B` | **kept** (staged) | kept |
+| `reset --mixed B` | at `B` | **reset** (unstaged) | kept |
+| `reset --hard B` | at `B` | **reset** | **reset** (changes gone) |
 
 ```text
              HEAD    INDEX    WORKTREE
@@ -120,27 +120,27 @@ git reset --hard B
 ## Reset vs Revert
 
 ```text
-Reset:   A ── B ── C ── D   →   A ── B              (pointer peeche, history rewrite)
-Revert:  A ── B ── C ── D   →   A ── B ── C ── D ── R  (history intact, undo commit add)
+Reset:   A ── B ── C ── D   →   A ── B              (pointer moved back, history rewritten)
+Revert:  A ── B ── C ── D   →   A ── B ── C ── D ── R  (history intact, undo commit added)
 ```
 
 | | Reset | Revert |
 |---|---|---|
-| Kaam | Pointer move | Naya undo commit |
-| History | Rewrite | Intact |
-| Purana commit | Unreachable | Exist karta hai |
-| Kahan | **Local / private** | **Shared / public** |
+| Purpose | Move pointer | New undo commit |
+| History | Rewritten | Intact |
+| Old commit | Unreachable | Still exists |
+| Where | **Local / private** | **Shared / public** |
 
 ## Reset vs Rebase
 
 | | Reset | Rebase |
 |---|---|---|
-| Kaam | Pointer kahin aur | Commits doosre base pe **replay** |
-| Naye commits | Nahi | Haan (`D'`, `E'`) |
+| Purpose | Point the pointer elsewhere | **Replay** commits onto another base |
+| New commits | No | Yes (`D'`, `E'`) |
 
 ## `git reflog` — recovery
 
-- `git log` = reachable commits; `git reflog` = HEAD **kahan-kahan point kar chuka**.
+- `git log` = reachable commits; `git reflog` = **everywhere HEAD has pointed**.
 
 ```bash
 git reflog
@@ -153,10 +153,10 @@ ghi789 HEAD@{2}: commit: Add validation
 ```
 
 ```bash
-git reset --hard def456     # wapas aa gaye
+git reset --hard def456     # recovered
 ```
 
-## `git commit --amend` — last commit replace
+## `git commit --amend` — replace the last commit
 
 ```bash
 git add forgotten_file
@@ -165,31 +165,31 @@ git commit --amend
 
 ```text
 Before:  A ── B ── C
-After:   A ── B ── C'      (C ≠ C', commit replace hua)
+After:   A ── B ── C'      (C ≠ C', commit was replaced)
 ```
 
-- Sirf **unpushed** commit pe; pushed pe = history rewrite.
+- Only on an **unpushed** commit; on a pushed one = history rewrite.
 
 ## `git restore` / `git switch`
 
 ```text
-git switch   → branches change karo
-git restore  → files restore / unstage karo
+git switch   → change branches
+git restore  → restore / unstage files
 ```
 
-| Kaam | Purana | Naya |
+| Task | Old | New |
 |---|---|---|
-| Branch switch | `git checkout feature` | `git switch feature` |
-| File ke local changes discard | `git checkout -- foo.cpp` | `git restore foo.cpp` |
-| File unstage (changes rakho) | `git reset foo.cpp` | `git restore --staged foo.cpp` |
+| Switch branch | `git checkout feature` | `git switch feature` |
+| Discard a file's local changes | `git checkout -- foo.cpp` | `git restore foo.cpp` |
+| Unstage a file (keep changes) | `git reset foo.cpp` | `git restore --staged foo.cpp` |
 
 - `restore --staged`: HEAD unchanged, working dir modified, staging clean.
 
 ## "Re-apply"
 
-- `git reapply` koi command nahi. Do matlab:
-  - **Ek commit dobara apply** → `git cherry-pick <commit>` → [Cherry-pick](./git-cherry-pick.md).
-  - **Rebase me commits replay** → [Rebase](./git-rebase.md):
+- `git reapply` is not a command. Two meanings:
+  - **Apply a commit again** → `git cherry-pick <commit>` → [Cherry-pick](./git-cherry-pick.md).
+  - **Replaying commits in a rebase** → [Rebase](./git-rebase.md):
 
 ```text
 Before:  A ── B ── C          After rebase:  A ── B ── C ── D' ── E'
@@ -201,23 +201,23 @@ Before:  A ── B ── C          After rebase:  A ── B ── C ── 
 
 | Operation | Mental model |
 |---|---|
-| `revert` | Commit banao jo doosre commit ko undo kare |
-| `reset` | Branch pointer move |
-| `reset --soft` | Pointer move, changes staged |
-| `reset --mixed` | Pointer move, changes unstaged |
-| `reset --hard` | Pointer move, changes discard |
-| `restore` | Files restore / unstage |
-| `amend` | Latest commit replace |
-| `reflog` | HEAD ki purani positions |
-| `switch` / `checkout` | Branch badlo |
+| `revert` | Create a commit that undoes another commit |
+| `reset` | Move branch pointer |
+| `reset --soft` | Move pointer, changes staged |
+| `reset --mixed` | Move pointer, changes unstaged |
+| `reset --hard` | Move pointer, discard changes |
+| `restore` | Restore / unstage files |
+| `amend` | Replace the latest commit |
+| `reflog` | Previous positions of HEAD |
+| `switch` / `checkout` | Change branch |
 
 ## Scenarios
 
-1. **Shared main pe bad commit `C`** → `git revert C`.
-2. **Local `C, D, E` ek commit** → `git reset --soft B && git commit` ya `git rebase -i B`.
-3. **Unpushed last commit me file bhool gaye** → `git commit --amend`.
-4. **Galti se file stage** → `git restore --staged <file>`.
-5. **Local history uda di** → `git reflog` → `git reset --hard <commit>`.
+1. **Bad commit `C` on shared main** → `git revert C`.
+2. **Combine local `C, D, E` into one commit** → `git reset --soft B && git commit` or `git rebase -i B`.
+3. **Forgot a file in the unpushed last commit** → `git commit --amend`.
+4. **Staged a file by mistake** → `git restore --staged <file>`.
+5. **Wiped out local history** → `git reflog` → `git reset --hard <commit>`.
 
 ```text
                   WHAT AM I TRYING TO DO?
@@ -231,4 +231,4 @@ Before:  A ── B ── C          After rebase:  A ── B ── C ── 
    reset       rebase     revert    cherry-pick     merge
 ```
 
-> `reset` aur `rebase` history **rewrite**; `revert` history **preserve** (naya commit add). Shared main pe ye distinction sabse important.
+> `reset` and `rebase` **rewrite** history; `revert` **preserves** history (adds a new commit). On shared main, this distinction matters most.

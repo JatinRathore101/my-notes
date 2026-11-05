@@ -2,21 +2,21 @@
 
 ## About This Repo
 
-This is a **multi-topic notes repo** — markdown tutorial notes for whatever CS topic I am studying (`system-design`, `git`, `lld`, aur aage jo bhi add ho). Every file is a self-contained tutorial/notes file based on one video/topic. Saare topics ki list `topics.md` me hai.
+This is a **multi-topic notes repo** — markdown tutorial notes for whatever CS topic I am studying (`system-design`, `git`, `lld`, and anything added later). Every file is a self-contained tutorial/notes file based on one video/topic. The full topic list lives in `topics.md`.
 
-Repo me do tarah ki entries hoti hain, dono ek hi topic index table me:
+The repo holds two entry types, both tracked in the same per-topic index table:
 
-1. **Processed notes** — `notes/<file>.md` study notes, zyada tar YouTube video ke transcript se bani (kabhi kisi aur source, jaise conversation/article, se bhi ban sakti hain).
-2. **Direct links** — bina process kiye store kiya gaya raw web link (article, blog, doc, repo). Iska koi `.md` file nahi banti, sirf table me row jaati hai.
+1. **Processed notes** — `notes/<file>.md` study notes, mostly generated from a YouTube video transcript (occasionally from another source such as a conversation or article).
+2. **Direct links** — a raw web link (article, blog, doc, repo) stored without processing. No `.md` file is created; only a table row is added.
 
 ## Topics & Index Files
 
-- Har note ek **topic** se belong karta hai. Topic slug hamesha **lowercase kebab-case**, no spaces — `system-design`, `lld`, `dbms`.
-- Agar topic input kisi aur form me mile (`System Design`, `system_design`), toh normalize karo: lowercase karo → non-alphanumeric chars ko `-` se replace karo → repeated `-` collapse karo → aage-peeche ke `-` hata do.
-- **Topic display name** = slug ke saare non-alphanumeric chars ko space se replace karo aur poora UPPERCASE kar do. Example: `system-design` → `SYSTEM DESIGN`.
-- **Notes hamesha flat `notes/` folder me** rehte hain — topic-wise subfolder kabhi mat banao.
-- Har topic ka apna index file `tables/` folder me: **`tables/<topic-slug>.table.md`** (e.g. `tables/system-design.table.md`, `tables/lld.table.md`). Table files kabhi repo root ya `notes/` me nahi.
-- Index file ka format fix hai — `# <TOPIC DISPLAY NAME>` heading, phir ye table:
+- Every note belongs to a **topic**. The topic slug is always **lowercase kebab-case**, no spaces — `system-design`, `lld`, `dbms`.
+- If the topic input arrives in another form (`System Design`, `system_design`), normalize it: lowercase → replace non-alphanumeric chars with `-` → collapse repeated `-` → strip leading/trailing `-`.
+- **Topic display name** = slug with all non-alphanumeric chars replaced by a space, fully UPPERCASE. Example: `system-design` → `SYSTEM DESIGN`.
+- **Notes always live in the flat `notes/` folder** — never create per-topic subfolders.
+- Each topic has its own index file in the `tables/` folder: **`tables/<topic-slug>.table.md`** (e.g. `tables/system-design.table.md`, `tables/lld.table.md`). Table files never go in the repo root or `notes/`.
+- The index file format is fixed — a `# <TOPIC DISPLAY NAME>` heading, followed by this table:
 
   ```markdown
   # SYSTEM DESIGN
@@ -27,16 +27,16 @@ Repo me do tarah ki entries hoti hain, dono ek hi topic index table me:
   | 2 | 20 Sep 2026 | <Link Title> | [Link](<web-url>) | |
   ```
 
-- `Link to file` ka path **`tables/` folder ke relative** hota hai, isliye hamesha `../notes/<filename>.md` likho (`./notes/` nahi).
-- **Columns har topic file me bilkul same rehte hain** — `# | Date | Title | Web link | Link to file`. Column kabhi add/remove/rename mat karo; values khaali ho sakti hain, headers nahi.
-- Row types (dono ek hi table me, ek hi `#` sequence me):
+- The `Link to file` path is **relative to the `tables/` folder**, so always write `../notes/<filename>.md` (not `./notes/`).
+- **Columns are identical in every topic file** — `# | Date | Title | Web link | Link to file`. Never add/remove/rename a column; values may be empty, headers may not.
+- Row types (both in the same table, sharing one `#` sequence):
   - **Processed note row** — `Web link` = `[Watch](<youtube-url>)`, `Link to file` = `[Open notes](../notes/<filename>.md)`.
-  - **Direct link row** — `Web link` = `[Link](<web-url>)`, `Link to file` **khaali** (` | |`), kyunki koi note file generate nahi hui.
-- Nayi entry (note ya direct link) pe us topic ki table file me **sirf ek nayi row append** karo (`#` last row se +1). Existing rows ko na edit karo, na reorder.
-- Row add karne se pehle **duplicate check** karo — same URL us table me pehle se ho toh row add mat karo, bata do ki row `#N` pe already hai.
-- `Title` me `|` character ho toh `\|` likho, taaki markdown table na tootay.
-- Topic ki table file exist nahi karti toh nayi banao — heading + table header + row `1`.
-- Repo root pe **`topics.md`** = saare topics ka table of contents. Columns fix: `# | Topic | Link to table`. Rows ki count hamesha `tables/` folder ki files ki count ke equal honi chahiye — har table file ki exactly ek row. Format:
+  - **Direct link row** — `Web link` = `[Link](<web-url>)`, `Link to file` **empty** (` | |`), since no note file was generated.
+- For a new entry (note or direct link), **append exactly one new row** to that topic's table file (`#` = last row + 1). Never edit or reorder existing rows.
+- Run a **duplicate check** before adding a row — if the same URL already exists in that table, do not add the row; report that it already exists at row `#N`.
+- If `Title` contains a `|` character, escape it as `\|` so the markdown table does not break.
+- If the topic's table file does not exist, create it — heading + table header + row `1`.
+- **`topics.md`** at the repo root is the table of contents of all topics. Fixed columns: `# | Topic | Link to table`. Its row count must always equal the number of files in `tables/` — exactly one row per table file. Format:
 
   ```markdown
   # TOPICS
@@ -46,32 +46,32 @@ Repo me do tarah ki entries hoti hain, dono ek hi topic index table me:
   | 1 | SYSTEM DESIGN | [system-design.table.md](./tables/system-design.table.md) |
   ```
 
-- **Naya topic** banaya (nayi table file) ho toh `topics.md` me ek row append karo (`#` last row se +1, `Topic` = display name, link `./tables/<topic-slug>.table.md`). Purana topic hai toh `topics.md` ko haath mat lagao.
-- **Entry delete** karte waqt (`prompts/delete-table-row.prompt.md`): row hatao, bachi rows ko `1..N` renumber karo (order badle bina), row se linked `notes/` file bhi delete karo. Table me ek bhi row na bache toh `tables/<topic-slug>.table.md` file delete kar do, `topics.md` se us topic ki row hatao aur bachi rows ko `1..N` renumber karo (order badle bina).
+- When a **new topic** is created (new table file), append one row to `topics.md` (`#` = last row + 1, `Topic` = display name, link `./tables/<topic-slug>.table.md`). For an existing topic, do not touch `topics.md`.
+- When **deleting an entry** (`prompts/delete-table-row.prompt.md`): remove the row, renumber the remaining rows `1..N` (preserving order), and delete the `notes/` file linked from that row. If no rows remain, delete `tables/<topic-slug>.table.md`, remove that topic's row from `topics.md`, and renumber the remaining rows `1..N` (preserving order).
 
 ## Prompts
 
-- Repo ke standard workflows `prompts/` folder me hain — inhi ko follow karo, apna alag process mat banao:
+- The repo's standard workflows live in the `prompts/` folder — follow them; do not invent a separate process:
   - `prompts/youtube-link-to-notes.prompt.md` — YouTube video → `notes/` file + table row.
-  - `prompts/store-direct-link.prompt.md` — raw web link → sirf table row, koi notes file nahi.
-  - `prompts/delete-table-row.prompt.md` — ek entry delete (confirm ke baad) + renumber.
-- Git commands (add, commit, stage/unstage) kabhi khud mat chalao — main manually karta hoon.
+  - `prompts/store-direct-link.prompt.md` — raw web link → table row only, no notes file.
+  - `prompts/delete-table-row.prompt.md` — delete one entry (after confirmation) + renumber.
+- Never run git commands (add, commit, stage/unstage) yourself — I handle git manually.
 
 ## Language & Tone (MOST IMPORTANT)
 
-- Write in **simple Hinglish** — Hindi + English mix, written in English (Latin) script. NOT plain formal English.
+- Write in **precise, technical English** using standard software-engineering terminology. No Hinglish.
 - Example of the expected tone:
-  - ❌ "Load balancing is a technique that distributes incoming network traffic across multiple servers to ensure reliability."
-  - ✅ "Load balancer ka kaam simple hai — aane wali requests ko multiple servers me baant do, taaki koi ek server overload na ho."
-- Explain like you're explaining to a friend, layman style. Technical terms (cache, sharding, replica, throughput etc.) English me hi rakho — unka Hindi translation mat karo.
-- Avoid jargon-heavy sentences. Agar koi jargon use karna zaroori hai, toh ek line me simple meaning bata do.
+  - ❌ "Load balancer ka kaam simple hai — aane wali requests ko multiple servers me baant do."
+  - ✅ "A load balancer distributes incoming requests across multiple servers so that no single server is overloaded."
+- Be direct and concise — state the mechanism, not a story. Use correct technical terms (cache, sharding, replica, throughput, etc.) instead of informal paraphrases.
+- Avoid unnecessarily dense sentences. If a less common term is required, define it in one line.
 
 ## Content Rules
 
 - **Short, crisp bullet points** — no long story-style paragraphs. Max 1-2 lines per point.
-- **Summarized but complete** — content chhota rakho, lekin koi important detail (trade-offs, numbers, edge cases, "kab use karna hai / kab nahi") kabhi skip mat karo.
-- No filler intro/outro text ("In this tutorial we will learn...", "Hope you enjoyed..."). Seedha point pe aao.
-- Prefer bullets, tables, and diagrams over paragraphs. Paragraph sirf tab jab genuinely zaroori ho (max 2-3 lines).
+- **Summarized but complete** — keep content short, but never skip an important detail (trade-offs, numbers, edge cases, when to use / when not to).
+- No filler intro/outro text ("In this tutorial we will learn...", "Hope you enjoyed..."). Get straight to the point.
+- Prefer bullets, tables, and diagrams over paragraphs. Use a paragraph only when genuinely necessary (max 2-3 lines).
 
 ## Markdown Formatting Rules
 
@@ -83,8 +83,8 @@ Every file must be **proper markdown**, not plain text:
 - Tables for comparisons (e.g. SQL vs NoSQL, Push vs Pull).
 - Fenced code blocks (with language tag) for code, configs, or API examples.
 - ` ```mermaid ` blocks or ASCII diagrams for architecture flows where helpful.
-- **ER diagrams** (` ```mermaid ` + `erDiagram`) for DB schema/relationships — sirf tab use karo jab genuinely zaroori ho aur doc ki quality improve kare (e.g. HLD me database design section). Har file me forcefully mat daalo.
-- **Mermaid tables/entity blocks** for table structures (columns, types, keys) — jab schema ka detail dikhana ho aur normal markdown table se baat clear na ho. Necessary ho tabhi use karo, warna simple markdown table hi kaafi hai.
+- **ER diagrams** (` ```mermaid ` + `erDiagram`) for DB schema/relationships — only when genuinely needed and they improve the doc (e.g. the database design section of an HLD). Do not force them into every file.
+- **Mermaid tables/entity blocks** for table structures (columns, types, keys) — when schema detail must be shown and a plain markdown table is not clear enough. Use only when necessary; otherwise a plain markdown table is sufficient.
 - Blockquotes (`>`) for important notes / gotchas / interview tips.
 
 ## Suggested File Structure
@@ -94,40 +94,40 @@ A typical tutorial file should roughly follow (adapt as needed per topic):
 ```markdown
 # Topic Name
 
-## Kya hai ye? (What & Why)
+## What & Why
 - 2-4 crisp points
 
-## Kaise kaam karta hai? (How it works)
+## How It Works
 - Core concept points / flow / diagram
 
 ## Key Components / Types
 - Bullets or table
 
 ## Trade-offs / Pros & Cons
-- Table ya bullets
+- Table or bullets
 
-## Kab use karein, kab nahi
+## When to Use / When Not To
 - Real-world scenarios
 
-> Interview tip / gotcha (agar relevant ho)
+> Interview tip / gotcha (if relevant)
 ```
 
 ## File Conventions
 
-- Notes ki files hamesha `notes/` folder me.
-- File names: `kebab-case.md` (e.g. `load-balancing.md`, `cap-theorem.md`, `url-shortener-hld.md`). YouTube video se bana note ho toh video title based naam (spaces → `-`) bhi theek hai.
-- One topic per file. Bade topics ko split karo instead of one giant file.
-- Related topics ko link karo: `[Caching](./caching.md)`.
-- Har note file ka header ye standard format follow kare — H1 title ke baad Topic / Video / Date ka bullet block:
+- Note files always live in the `notes/` folder.
+- File names: `kebab-case.md` (e.g. `load-balancing.md`, `cap-theorem.md`, `url-shortener-hld.md`). For a note generated from a YouTube video, a video-title-based name (spaces → `-`) is also fine.
+- One topic per file. Split large topics instead of writing one giant file.
+- Link related topics: `[Caching](./caching.md)`.
+- Every note file's header follows this standard format — a Topic / Video / Date bullet block after the H1 title:
 
   ```markdown
-  # <Note ya Video Title>
+  # <Note or Video Title>
 
   - **Topic:** SYSTEM DESIGN
   - **Video:** [<Video Title>](https://www.youtube.com/watch?v=...)
   - **Date:** 06 Sep 2026
   ```
 
-  - `Topic` hamesha display name (UPPERCASE) form me.
-  - `Video` line sirf tab jab note kisi video se bana ho.
+  - `Topic` is always in display-name (UPPERCASE) form.
+  - Include the `Video` line only when the note was generated from a video.
   - `Date` format: `DD MMM YYYY`.

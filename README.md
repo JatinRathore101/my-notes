@@ -1,78 +1,78 @@
 # My Notes 📚
 
-- Ye repo alag-alag CS topics (**System Design**, **Git**, **LLD**, aur aage jo bhi add ho) ke markdown tutorial notes ka collection hai — poori list [topics.md](./topics.md) me.
-- Notes **simple Hinglish** me likhe gaye hain — friend ko samjhane wale style me, short crisp bullet points ke saath.
-- Zyada tar notes YouTube tutorials (jaise ByteByteGo) ke transcripts se bane hain.
-- Saath hi **raw web links** (article, blog, doc, repo) bhi bina process kiye store kar sakte hain — sirf index table me row, koi notes file nahi.
+- A collection of markdown tutorial notes on CS topics (**System Design**, **Git**, **LLD**, and anything added later) — full list in [topics.md](./topics.md).
+- Notes are written in **concise technical English** — short, crisp bullet points using standard software terminology.
+- Most notes are generated from YouTube tutorial transcripts (e.g. ByteByteGo).
+- **Raw web links** (article, blog, doc, repo) can also be stored without processing — only an index table row, no notes file.
 
 ## Repo Structure
 
 ```text
 my-notes/
-├── notes/               # Saare tutorial notes (ek video = ek file, sab topics ek hi folder me)
-├── prompts/             # Reusable prompts (video → notes, direct link store, entry delete)
+├── notes/               # All tutorial notes (one video = one file, all topics in one flat folder)
+├── prompts/             # Reusable prompts (video → notes, store direct link, delete entry)
 ├── tables/              # Per-topic index files — <topic>.table.md (date, title, web link, file link)
-├── topics.md            # Table of contents — har topic ki ek row, uski table file ke link ke saath
-└── CLAUDE.md            # Notes likhne ke rules (language, tone, formatting)
+├── topics.md            # Table of contents — one row per topic, linking to its table file
+└── CLAUDE.md            # Rules for writing notes (language, tone, formatting)
 ```
 
-- Notes kabhi topic-wise subfolder me nahi jaate — sab flat `notes/` me rehte hain.
-- Topic ka alag hona sirf **index file** se pata chalta hai: `tables/system-design.table.md`, `tables/lld.table.md`, waghairah.
+- Notes never go into per-topic subfolders — everything stays in the flat `notes/` folder.
+- A note's topic is determined only by its **index file**: `tables/system-design.table.md`, `tables/lld.table.md`, etc.
 
 ## Topics Index
 
-- Saare topics ki list **[topics.md](./topics.md)** me hai — har topic ki ek row, uski table file ke link ke saath (`# | Topic | Link to table`).
-- `topics.md` ki rows hamesha `tables/` folder ki files ke barabar rehti hain — nayi table bani toh row add, table delete hui toh row delete + `1..N` renumber.
-- Har topic ka apna index file `tables/<topic>.table.md` hai — usme us topic ki saari entries (date, title, web link, file link) milengi.
+- The full topic list is in **[topics.md](./topics.md)** — one row per topic, linking to its table file (`# | Topic | Link to table`).
+- `topics.md` rows always match the files in the `tables/` folder — a new table adds a row; a deleted table removes its row and the rest are renumbered `1..N`.
+- Each topic has its own index file `tables/<topic>.table.md` — it lists all entries for that topic (date, title, web link, file link).
 
-Har index file me **exactly ye 5 columns** hote hain — dono tarah ki entries ek hi table me rehti hain:
+Every index file has **exactly these 5 columns** — both entry types live in the same table:
 
 | # | Date | Title | Web link | Link to file |
 |---|------|-------|---------------|--------------|
-| 1 | 05 Sep 2026 | Processed note (video se bana) | [Watch](https://youtube.com/...) | [Open notes](../notes/file.md) |
+| 1 | 05 Sep 2026 | Processed note (generated from a video) | [Watch](https://youtube.com/...) | [Open notes](../notes/file.md) |
 | 2 | 20 Sep 2026 | Direct link (unprocessed) | [Link](https://example.com/...) | |
 
-- Direct link wali row me `Link to file` **khaali** rehta hai, kyunki uska koi notes file nahi banti.
-- `Link to file` ka path table file ke relative hota hai (`tables/` ke andar se), isliye `../notes/...` likha jaata hai.
-- Column headers kabhi change nahi hote — sirf values khaali ho sakti hain.
+- In a direct link row, `Link to file` stays **empty**, since no notes file is generated.
+- The `Link to file` path is relative to the table file (inside `tables/`), hence `../notes/...`.
+- Column headers never change — only values may be empty.
 
-## Naya Note Kaise Banate Hain?
+## Creating a New Note
 
-1. YouTube video ka URL lo aur decide karo ye kis **topic** ka hai (e.g. `system-design`, `lld`).
-2. [youtube-link-to-notes.prompt.md](./prompts/youtube-link-to-notes.prompt.md) wala prompt Claude Code me use karo — URL **aur** topic name ke saath.
-3. Prompt automatically:
-   - Video ka **title aur public transcript** fetch karta hai (video download nahi hota).
-   - Transcript ko clean, structured study notes me convert karta hai.
-   - `notes/` folder me `<video-title>.md` file banata hai.
-   - `tables/<topic>.table.md` me nayi row add karta hai (file na ho toh nayi bana deta hai).
-   - Topic bilkul naya ho toh `topics.md` me bhi ek row add kar deta hai.
+1. Take the YouTube video URL and decide which **topic** it belongs to (e.g. `system-design`, `lld`).
+2. Run the [youtube-link-to-notes.prompt.md](./prompts/youtube-link-to-notes.prompt.md) prompt in Claude Code — with the URL **and** the topic name.
+3. The prompt automatically:
+   - Fetches the video's **title and public transcript** (the video itself is never downloaded).
+   - Converts the transcript into clean, structured study notes.
+   - Creates `notes/<video-title>.md`.
+   - Appends a row to `tables/<topic>.table.md` (creating the file if missing).
+   - Appends a row to `topics.md` if the topic is brand new.
 
-## Direct Web Link Kaise Store Karein?
+## Storing a Direct Web Link
 
-Jab koi article/blog/doc bas **save** karna ho, notes banane ki zarurat na ho:
+When an article/blog/doc only needs to be **saved**, without generating notes:
 
-1. Link, uska **title** aur **topic** decide karo.
-2. [store-direct-link.prompt.md](./prompts/store-direct-link.prompt.md) wala prompt Claude Code me use karo — link + title + topic ke saath.
-3. Prompt automatically:
-   - Link ko **fetch/process nahi karta** (zero token waste) — sirf as-is store karta hai.
-   - `tables/<topic>.table.md` me nayi row add karta hai, `Link to file` column khaali chhod kar.
-   - Duplicate URL ho toh row add nahi karta, bata deta hai.
-   - Topic bilkul naya ho toh `topics.md` me bhi row add kar deta hai.
+1. Decide the link, its **title** and **topic**.
+2. Run the [store-direct-link.prompt.md](./prompts/store-direct-link.prompt.md) prompt in Claude Code — with link + title + topic.
+3. The prompt automatically:
+   - **Does not fetch/process** the link (zero token waste) — stores it as-is.
+   - Appends a row to `tables/<topic>.table.md`, leaving `Link to file` empty.
+   - Skips the row and reports it if the URL is a duplicate.
+   - Appends a row to `topics.md` if the topic is brand new.
 
-## Koi Entry Delete Kaise Karein?
+## Deleting an Entry
 
-1. Topic aur us entry ka **row number** (`#` column wali value) note kar lo.
-2. [delete-table-row.prompt.md](./prompts/delete-table-row.prompt.md) wala prompt Claude Code me use karo — topic + row number ke saath.
-3. Prompt automatically:
-   - Row dikha kar pehle **confirmation maangta hai** (delete destructive hai).
-   - Row se linked note file `notes/` se delete karta hai (direct link row ho toh koi file nahi).
-   - Table se row hata kar bachi rows ko `1..N` renumber kar deta hai.
-   - Table khaali ho jaye toh `tables/<topic>.table.md` file delete karta hai, `topics.md` se us topic ki row hatata hai aur bachi rows ko `1..N` renumber karta hai.
+1. Note the topic and the entry's **row number** (the `#` column value).
+2. Run the [delete-table-row.prompt.md](./prompts/delete-table-row.prompt.md) prompt in Claude Code — with topic + row number.
+3. The prompt automatically:
+   - Shows the row and asks for **confirmation** first (deletion is destructive).
+   - Deletes the note file linked from the row in `notes/` (no file for a direct link row).
+   - Removes the row from the table and renumbers the remaining rows `1..N`.
+   - If the table becomes empty, deletes `tables/<topic>.table.md`, removes that topic's row from `topics.md` and renumbers the remaining rows `1..N`.
 
-## Notes ka Format
+## Note Format
 
-- Har file self-contained hai — ek topic/video, ek file.
-- File ke top pe topic, video link (sirf tab jab note video se bana ho) aur date hota hai:
+- Every file is self-contained — one topic/video, one file.
+- The top of each file holds the topic, video link (only when the note was generated from a video) and date:
 
   ```markdown
   # <Video Title>
@@ -82,5 +82,5 @@ Jab koi article/blog/doc bas **save** karna ho, notes banane ki zarurat na ho:
   - **Date:** 06 Sep 2026
   ```
 
-- Style: short bullets, tables for comparisons, mermaid/ASCII diagrams jahan helpful ho.
-- Detailed writing rules ke liye [CLAUDE.md](./CLAUDE.md) dekho.
+- Style: short bullets, tables for comparisons, mermaid/ASCII diagrams where helpful.
+- See [CLAUDE.md](./CLAUDE.md) for the detailed writing rules.

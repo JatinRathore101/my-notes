@@ -4,18 +4,18 @@
 - **Video:** [What happens when you type a URL into your browser? (ByteByteGo)](https://www.youtube.com/watch?v=AlkDbnbv7dk)
 - **Date:** 05 Sep 2026
 
-## URL kya hota hai?
+## What is a URL?
 
-**URL** = Uniform Resource Locator. Iske 4 parts hote hain:
+**URL** = Uniform Resource Locator. It has 4 parts:
 
-| Part | Example | Matlab |
-|------|---------|--------|
-| **Scheme** | `http://` | Browser ko batata hai kaunsa protocol use karna hai. `https://` me connection **encrypted** hota hai. |
-| **Domain** | `example.com` | Site ka domain name. |
-| **Path** | `/products/` | Server pe directory jaisa samjho. |
-| **Resource** | `phone.html` | File jaisa samjho. |
+| Part | Example | Meaning |
+|------|---------|---------|
+| **Scheme** | `http://` | Tells the browser which protocol to use. With `https://` the connection is **encrypted**. |
+| **Domain** | `example.com` | The site's domain name. |
+| **Path** | `/products/` | Think of it as a directory on the server. |
+| **Resource** | `phone.html` | Think of it as a file. |
 
-- Path + resource ka difference aksar clear nahi hota — simple funda: regular file system ke **directory aur file** jaise hain. Dono milke batate hain ki server se kaunsa resource load karna hai.
+- The distinction between path and resource is often unclear — simple rule: they map to the **directory and file** of a regular file system. Together they identify which resource to load from the server.
 
 ## Overall Flow
 
@@ -27,50 +27,50 @@ sequenceDiagram
     B->>D: 1. DNS lookup (domain → IP)
     D-->>B: IP address
     B->>S: 2. TCP connection (handshake)
-    Note over B,S: HTTPS ho toh SSL/TLS handshake bhi
+    Note over B,S: For HTTPS, an SSL/TLS handshake too
     B->>S: 3. HTTP request
     S-->>B: 4. HTTP response
-    Note over B: 5. HTML render + baaki resources fetch
+    Note over B: 5. Render HTML + fetch remaining resources
 ```
 
 ## Step 1: DNS Lookup
 
-- **DNS (Domain Name System)** = internet ki **phone book**. Domain name ko **IP address** me translate karta hai, taaki browser server tak pahunch sake.
-- Lookup fast rakhne ke liye DNS info **heavily cached** hoti hai — har level pe:
-  1. **Browser cache** — browser khud thodi der ke liye answer cache karta hai.
-  2. **OS cache** — browser cache me nahi mila toh operating system se poochta hai, OS bhi short period ke liye cache rakhta hai.
-  3. **DNS resolver** — OS ke paas bhi nahi hai toh internet pe DNS resolver ko query jaati hai. Ye ek chain of requests trigger karta hai jab tak IP resolve nahi ho jata.
-- Is process me DNS infrastructure ke **kai servers** involve hote hain, aur **har step pe answer cache** hota hai.
+- **DNS (Domain Name System)** = the **phone book** of the internet. Translates a domain name into an **IP address** so the browser can reach the server.
+- To keep lookups fast, DNS info is **heavily cached** — at every level:
+  1. **Browser cache** — the browser itself caches the answer for a short time.
+  2. **OS cache** — if not in the browser cache, the browser asks the operating system; the OS also caches for a short period.
+  3. **DNS resolver** — if the OS doesn't have it either, a query goes to a DNS resolver on the internet. This triggers a chain of requests until the IP is resolved.
+- **Many servers** in the DNS infrastructure are involved in this process, and the **answer is cached at every step**.
 
 ## Step 2: TCP Connection
 
-- IP address milne ke baad browser server se **TCP connection** establish karta hai.
-- TCP connection banane me **handshake** hota hai — isme **kai network round trips** lagte hain (yaani costly hai).
-- Isliye modern browsers **keep-alive connection** use karte hain — ek bana hua TCP connection ko baar-baar **reuse** karte hain, taaki page loading fast rahe.
+- Once it has the IP address, the browser establishes a **TCP connection** with the server.
+- Establishing a TCP connection involves a **handshake** — this takes **several network round trips** (i.e. it is costly).
+- Hence modern browsers use **keep-alive connections** — an established TCP connection is **reused** repeatedly to keep page loading fast.
 
-### HTTPS ho toh extra kaam
+### Extra Work for HTTPS
 
-- HTTPS me new connection banana aur bhi **mehenga** hai — **SSL/TLS handshake** karna padta hai jo browser aur server ke beech encrypted connection banata hai.
-- Ye handshake expensive hai, isliye browsers **SSL session resumption** jaisi tricks use karte hain cost kam karne ke liye (purana session dobara use kar lo, full handshake mat karo).
+- With HTTPS, creating a new connection is even **more expensive** — it requires an **SSL/TLS handshake** that sets up an encrypted connection between browser and server.
+- This handshake is expensive, so browsers use tricks like **SSL session resumption** to reduce the cost (reuse a previous session instead of doing a full handshake).
 
 ## Step 3-4: HTTP Request & Response
 
-- Established TCP connection ke upar browser **HTTP request** bhejta hai.
-- HTTP apne aap me ek **simple protocol** hai.
-- Server request process karke **response** wapas bhejta hai.
+- The browser sends an **HTTP request** over the established TCP connection.
+- HTTP itself is a **simple protocol**.
+- The server processes the request and sends back a **response**.
 
 ## Step 5: Rendering & Additional Resources
 
-- Browser response receive karke **HTML content render** karta hai.
-- Page me aksar aur resources hote hain — **JavaScript bundles, images** etc.
-- In sabke liye browser **same process repeat** karta hai: DNS lookup → TCP connection → HTTP request.
+- The browser receives the response and **renders the HTML content**.
+- Pages often include additional resources — **JavaScript bundles, images**, etc.
+- For each of these, the browser **repeats the same process**: DNS lookup → TCP connection → HTTP request.
 
 ## Key Takeaways
 
-- URL ke 4 parts: **scheme, domain, path, resource**.
-- **DNS = phone book of internet**; speed ke liye har layer (browser → OS → resolver) pe caching.
-- **TCP handshake costly** hai → keep-alive se connection reuse.
-- **TLS handshake aur bhi costly** → SSL session resumption se optimize.
-- Ek page load = ye poora cycle **har resource ke liye repeat** hota hai.
+- 4 parts of a URL: **scheme, domain, path, resource**.
+- **DNS = phone book of the internet**; cached at every layer (browser → OS → resolver) for speed.
+- **TCP handshake is costly** → reuse connections via keep-alive.
+- **TLS handshake is even costlier** → optimized via SSL session resumption.
+- One page load = this entire cycle **repeated for every resource**.
 
-> **Interview tip:** Ye classic interview question hai. Answer ka structure yaad rakho — URL parsing → DNS lookup (caching layers ke saath) → TCP (+TLS) handshake → HTTP request/response → render + repeat for resources. Har step pe "kaise fast banate hain" (caching, keep-alive, session resumption) mention karna strong answer banata hai.
+> **Interview tip:** This is a classic interview question. Remember the answer structure — URL parsing → DNS lookup (with caching layers) → TCP (+TLS) handshake → HTTP request/response → render + repeat for resources. Mentioning "how to make it fast" at each step (caching, keep-alive, session resumption) makes for a strong answer.

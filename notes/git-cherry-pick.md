@@ -5,13 +5,13 @@
 
 > Related: [Merge](./git-merge.md), [Rebase](./git-rebase.md), [Squash](./git-squash.md), [Reset/Revert](./git-reset-revert-reapply.md).
 
-## Kya hai
+## What it is
 
-- **Ek specific commit ke changes** current branch pe **naye commit** ke roop me apply karna.
+- Applies **the changes of one specific commit** to the current branch as a **new commit**.
 
 ```text
 main:     A ── B ── C
-feature:  A ── B ── C ── D ── E       sirf D chahiye main pe
+feature:  A ── B ── C ── D ── E       only D is needed on main
 
 git checkout main
 git cherry-pick D
@@ -19,38 +19,38 @@ git cherry-pick D
 main:     A ── B ── C ── D'
 ```
 
-- `D ≠ D'` — changes same, parent alag → naya hash.
+- `D ≠ D'` — same changes, different parent → new hash.
 
 ## Procedure
 
-1. Target branch pe checkout (jahan changes chahiye).
-2. `git cherry-pick <hash>` — Git commit ka diff (parent ke relative) HEAD pe apply karke naya commit banata hai.
+1. Check out the target branch (where the changes are needed).
+2. `git cherry-pick <hash>` — Git applies the commit's diff (relative to its parent) onto HEAD and creates a new commit.
 
 ```bash
 git checkout main
-git cherry-pick abc123            # ek commit
+git cherry-pick abc123            # single commit
 git cherry-pick abc123 def456     # multiple commits
 ```
 
 ### Conflict
 
 ```bash
-# files fix karo
+# fix the files
 git add <files>
 git cherry-pick --continue
-# ya cancel
+# or cancel
 git cherry-pick --abort
 ```
 
 ## Use cases
 
-- **Hotfix:** release pe fix `D`, main pe bhi chahiye, `E` nahi.
-- **Backport:** main ka fix purane release branch pe.
-- **Galat branch pe commit:** sahi branch pe cherry-pick, galat se reset.
+- **Hotfix:** fix `D` is on release; it is also needed on main, but `E` is not.
+- **Backport:** apply a fix from main to an older release branch.
+- **Commit made on the wrong branch:** cherry-pick it onto the correct branch, reset it off the wrong one.
 
 ```text
 main:      A ── B ── C
-release:   A ── B ── C ── D ── E     D = critical fix, E = nahi chahiye
+release:   A ── B ── C ── D ── E     D = critical fix, E = not needed
 
 git checkout main
 git cherry-pick D
@@ -62,21 +62,21 @@ main:      A ── B ── C ── D'
 
 | | Merge | Cherry-pick |
 |---|---|---|
-| Laata hai | Branch ki **poori history** | **Ek commit** ke changes |
+| Brings in | The branch's **entire history** | The changes of **one commit** |
 | Granularity | branch → branch | commit → branch |
-| Naya commit | Merge commit (2 parents) ya FF | Normal commit, naya hash |
-| Original se link | `M` ka parent original | **Koi link nahi** — Git ko nahi pata `D'` = `D` |
+| New commit | Merge commit (2 parents) or FF | Normal commit, new hash |
+| Link to original | `M`'s parent is the original | **No link** — Git does not know `D'` = `D` |
 
-> Same change do commits (`D`, `D'`) me → baad me wo branch merge karo toh conflict/duplicate possible. `D` kisi pehle commit pe depend kare jo target pe nahi → conflict.
+> Same change in two commits (`D`, `D'`) → merging that branch later can cause conflicts/duplicates. If `D` depends on an earlier commit that is not on the target → conflict.
 
 ## Merge vs Rebase vs Squash vs Cherry-pick
 
 | Operation | Main idea |
 |---|---|
-| **Merge** | Do histories jodo |
-| **Rebase** | Mere commits doosre base pe replay |
-| **Squash** | Multiple commits ek me |
-| **Cherry-pick** | Selected commit(s) ke changes copy |
+| **Merge** | Join two histories |
+| **Rebase** | Replay my commits onto another base |
+| **Squash** | Combine multiple commits into one |
+| **Cherry-pick** | Copy the changes of selected commit(s) |
 
 ```text
 Merge:        A ── B ── C ── D ─────── M
@@ -89,11 +89,11 @@ Squash:       A ── B ── C ── S
 
 Cherry-pick:  A ── B ── C
                         \
-                         X        (X = kisi ek commit ke changes ka naya commit)
+                         X        (X = new commit containing the changes of one commit)
 ```
 
-- Rebase = poori branch ke commits ka series me cherry-pick jaisa.
+- Rebase ≈ cherry-picking all of a branch's commits in sequence.
 
 ## Interview line
 
-- Specific commit ke changes current branch pe naye commit ke roop me apply karna; hotfix/backport ke liye jab poori branch merge nahi karni. Naya hash banta hai.
+- Applies a specific commit's changes to the current branch as a new commit; used for hotfixes/backports when you do not want to merge the whole branch. A new hash is created.

@@ -1,6 +1,6 @@
-Use this to **store a plain web link** (article, blog, doc, GitHub repo, tweet, video — kuch bhi) in the notes repo **without generating any notes file**.
+Use this to **store a plain web link** (article, blog, doc, GitHub repo, tweet, video — anything) in the notes repo **without generating any notes file**.
 
-This is the "bookmark" flow. Koi transcript fetch nahi hoga, koi content process nahi hoga, koi `.md` note nahi banega — sirf topic ki index table me ek row add hogi.
+This is the "bookmark" flow. No transcript is fetched, no content is processed, no `.md` note is created — only one row is added to the topic's index table.
 
 ## INPUTS
 
@@ -12,16 +12,16 @@ I will give you three things:
 
 Rules:
 
-* Agar **topic** missing ho — STOP and ask me. Topic ko URL ya title se **guess mat karo**.
-* Agar **title** missing ho — STOP and ask me. Page ko fetch karke title nikalne ki koshish mat karo.
-* Agar **link** missing ho — STOP and ask me.
+* If the **topic** is missing — STOP and ask me. **Do not infer** the topic from the URL or title.
+* If the **title** is missing — STOP and ask me. Do not fetch the page to extract a title.
+* If the **link** is missing — STOP and ask me.
 
 ### Topic slug + display name
 
 * **Slug** = lowercase, non-alphanumeric chars replaced with `-`, repeated `-` collapsed, leading/trailing `-` removed.
   * `System Design` / `system_design` / `System-Design` → all become `system-design`.
   * Slug is used for the index filename: `tables/<topic-slug>.table.md`.
-* **Display name** = slug ke saare non-alphanumeric chars ko space se replace karo, poora UPPERCASE.
+* **Display name** = slug with all non-alphanumeric chars replaced by a space, fully UPPERCASE.
   * `system-design` → `SYSTEM DESIGN`, `lld` → `LLD`.
   * Display name is used as the index file's H1 heading and in the `Topic` column of `topics.md`.
 
@@ -31,45 +31,45 @@ Rules:
 * **DO NOT** read the page content, transcript, captions, or any media behind the link.
 * **DO NOT** summarize the link or create any notes file in `notes/`.
 * **DO NOT** use Claude credits/tokens on the link's content.
-* URL ko bilkul as-is store karo — shorten, expand, clean ya redirect-resolve mat karo.
-* Title bhi exactly wahi use karo jo maine diya hai (bas leading/trailing spaces trim kar do).
-* Agar title me `|` character ho toh use `\|` likh do, taaki markdown table na tootay.
+* Store the URL exactly as-is — do not shorten, expand, clean or resolve redirects.
+* Use the title exactly as given (only trim leading/trailing whitespace).
+* If the title contains a `|` character, escape it as `\|` so the markdown table does not break.
 
 ## TASK
 
-1. Topic ko normalize karo → slug + display name.
-2. `tables/` folder me `tables/<topic-slug>.table.md` dhoondo.
-3. File mile toh usme **sirf ek nayi row append** karo. Na mile toh nayi file banao.
-4. Bas. Aur kuch nahi.
+1. Normalize the topic → slug + display name.
+2. Locate `tables/<topic-slug>.table.md` in the `tables/` folder.
+3. If found, **append exactly one new row**. If not found, create the file.
+4. Nothing else.
 
 ## TABLE FORMAT (same for all topics)
 
-Har topic ki index file me **exactly ye 5 columns** hote hain — YouTube-notes rows aur direct-link rows dono isi ek table me, isi order me rehte hain:
+Every topic index file has **exactly these 5 columns** — YouTube-note rows and direct-link rows live in the same table, in this order:
 
 ```markdown
 | # | Date | Title | Web link | Link to file |
 |---|------|-------|---------------|--------------|
 ```
 
-Direct link row me `Link to file` column **khaali** rehta hai (kyunki koi note file generate nahi hui) — column hataana nahi hai, sirf value blank rakhni hai:
+In a direct-link row the `Link to file` column is **empty** (no note file was generated) — do not remove the column, only leave the value blank:
 
 ```markdown
 | 4 | 20 Sep 2026 | <Title> | [Link](<web-url>) | |
 ```
 
-* `#` — last row ka serial number +1 (row YouTube-note ki ho ya direct-link ki, dono ek hi sequence me count hote hain).
-* `Date` — aaj ki date, `DD MMM YYYY` format (e.g. `20 Sep 2026`).
-* `Title` — jo title maine diya, exactly wahi.
-* `Web link` — `[Link](<web-url>)`. (YouTube-notes rows `[Watch](...)` use karti hain, unhe waisa hi rehne do.)
-* `Link to file` — **empty** (` | |` — do pipes ke beech kuch nahi, bas ek space).
+* `#` — last row's serial number + 1 (YouTube-note and direct-link rows share one sequence).
+* `Date` — today's date, `DD MMM YYYY` format (e.g. `20 Sep 2026`).
+* `Title` — exactly the title I gave.
+* `Web link` — `[Link](<web-url>)`. (YouTube-note rows use `[Watch](...)`; leave them unchanged.)
+* `Link to file` — **empty** (` | |` — nothing between the two pipes except a single space).
 
 ## UPDATE THE TOPIC INDEX (`tables/<topic-slug>.table.md`)
 
 1. Look for `tables/<topic-slug>.table.md` inside the **`tables/` folder** (e.g. `tables/system-design.table.md`).
 2. **If it exists** — append ONE new row at the very end of the table.
-   * Existing rows ko na edit karo, na reorder karo, na renumber karo.
-   * Table ka header row change mat karo — wo already `# | Date | Title | Web link | Link to file` hona chahiye.
-   * Agar kisi purani table ka header alag ho (e.g. `Link to video`), toh usko in 5 standard columns me fix kar do aur existing rows ke values waise hi rakho.
+   * Do not edit, reorder or renumber existing rows.
+   * Do not change the table header row — it must already be `# | Date | Title | Web link | Link to file`.
+   * If an older table has a different header (e.g. `Link to video`), fix it to these 5 standard columns and keep existing row values unchanged.
 3. **If it does not exist** — create it with the topic display name as H1, the standard table header, and this link as row `1`:
 
    ```markdown
@@ -85,29 +85,29 @@ Direct link row me `Link to file` column **khaali** rehta hai (kyunki koi note f
 
 ## DUPLICATE CHECK
 
-* Row add karne se pehle table me check karo ki same URL pehle se toh nahi hai.
-* Already exist karta ho toh **row add mat karo** — mujhe bata do ki ye link pehle se row `#N` pe maujood hai.
+* Before adding the row, check whether the same URL already exists in the table.
+* If it exists, **do not add the row** — tell me the link already exists at row `#N`.
 
 ## UPDATE `topics.md` (only for a brand-new topic)
 
-* `topics.md` (repo root) saare topics ka table of contents hai — columns `# | Topic | Link to table`, `tables/` ki har file ki ek row.
-* Agar tumhe `tables/<topic-slug>.table.md` **banana** pada (yaani is topic ki repo me pehli entry hai), toh `topics.md` ke end me ek row append karo:
-  * `#` — last row +1.
+* `topics.md` (repo root) is the table of contents of all topics — columns `# | Topic | Link to table`, one row per file in `tables/`.
+* If you had to **create** `tables/<topic-slug>.table.md` (i.e. this is the topic's first entry in the repo), append one row at the end of `topics.md`:
+  * `#` — last row + 1.
   * `Topic` — topic display name (UPPERCASE).
   * `Link to table` — `[<topic-slug>.table.md](./tables/<topic-slug>.table.md)`.
 
-  Example (illustrative — apna `#`, display name aur slug use karo):
+  Example (illustrative — use your own `#`, display name and slug):
 
   ```markdown
   | 5 | DBMS | [dbms.table.md](./tables/dbms.table.md) |
   ```
 
-* Existing rows ko na edit karo, na reorder, na renumber.
-* Topic ki index file pehle se exist karti thi toh `topics.md` ko **haath mat lagao**.
+* Do not edit, reorder or renumber existing rows.
+* If the topic's index file already existed, **do not touch `topics.md`**.
 
 ## TOKEN/CREDIT EFFICIENCY
 
-Ye flow bilkul sasta hona chahiye. Workflow:
+This flow must be extremely cheap. Workflow:
 
 ```text
 Web link + Title + Topic
@@ -125,11 +125,11 @@ If topic was new → append row to topics.md
 
 **Never fetch or process the link's content.**
 
-**Git commands bilkul mat chalao** — na `git add`, na commit, na stage/unstage. Main khud karunga.
+**Never run git commands** — no `git add`, no commit, no stage/unstage. I handle git manually.
 
 After you're done, give me only:
 
-1. A short confirmation that the row was added (ya duplicate tha toh wo bata do)
+1. A short confirmation that the row was added (or that it was a duplicate)
 2. The topic slug used
 3. Which index file the row was added to, and whether that index file was newly created
 4. The row number assigned

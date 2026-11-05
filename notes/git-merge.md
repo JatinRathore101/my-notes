@@ -5,42 +5,42 @@
 
 > Related: [Merge vs Rebase (video)](./Git-MERGE-vs-REBASE-Everything-You-Need-to-Know.md), [Squash](./git-squash.md), [Rebase](./git-rebase.md), [Cherry-pick](./git-cherry-pick.md), [Reset/Revert](./git-reset-revert-reapply.md).
 
-## Mental model — Git history ek graph hai
+## Mental model — Git history is a graph
 
-- Merge/rebase/squash = **commit graph banane/rewrite karne ke alag tareeke**, sirf "changes combine" karne wali commands nahi.
+- Merge/rebase/squash = **different ways to build/rewrite the commit graph**, not just commands that "combine changes".
 
 ### Commit
 
 ```text
 Commit
-├── snapshot / tree      (poore project ki state)
-├── parent commit(s)     (kis commit ke baad aaya)
+├── snapshot / tree      (state of the entire project)
+├── parent commit(s)     (which commit it came after)
 ├── author, committer
 ├── message
 └── metadata
 ```
 
-- **Parent** sabse important — commit ki identity (hash) ka part hai.
+- **Parent** is the most important — it is part of the commit's identity (hash).
 - Normal commit: 1 parent. **Merge commit: 2 parents.**
 
-### Branch = movable pointer, HEAD = "main kahan hoon"
+### Branch = movable pointer, HEAD = "where am I"
 
 ```text
 A ── B ── C
           ↑
-       main, feature      ← git checkout -b feature ke turant baad
+       main, feature      ← right after git checkout -b feature
 
 A ── B ── C ── D
           ↑    ↑
-        main  feature     ← feature pe ek commit karne ke baad
+        main  feature     ← after making one commit on feature
 ```
 
-- Branch code ki copy nahi, bas pointer. `HEAD → main → C`; switch karo toh `HEAD → feature → D`.
+- A branch is not a copy of the code, just a pointer. `HEAD → main → C`; after switching, `HEAD → feature → D`.
 
 ## Ancestor / Common ancestor / Merge base
 
-- **Ancestor:** parent links follow karke peeche jo bhi mile. `A → B → C → D → E` me `E` ke ancestors = `D, C, B, A` (`E` khud nahi).
-- **Common ancestor:** dono branches ka ancestor. **Merge base** = sabse latest common ancestor.
+- **Ancestor:** anything reached by following parent links backwards. In `A → B → C → D → E`, the ancestors of `E` = `D, C, B, A` (not `E` itself).
+- **Common ancestor:** an ancestor of both branches. **Merge base** = the most recent common ancestor.
 
 ```text
              C ── D        feature
@@ -50,18 +50,18 @@ A ── B ───
              E ── F        main
 ```
 
-- `A`, `B` common ancestors; `B` merge base.
+- `A`, `B` are common ancestors; `B` is the merge base.
 
-## Three-way merge — kaise kaam karta hai
+## Three-way merge — how it works
 
 ```bash
 git checkout main
 git merge feature
 ```
 
-1. Merge base dhundo (`B`).
-2. `B → D` me kya badla (feature)? `B → F` me kya badla (main)?
-3. Dono combine karo → merge commit `M` (2 parents).
+1. Find the merge base (`B`).
+2. What changed in `B → D` (feature)? What changed in `B → F` (main)?
+3. Combine both → merge commit `M` (2 parents).
 
 ```text
              C ── D
@@ -73,7 +73,7 @@ A ── B ───          M       ← M: parent 1 = F (main), parent 2 = D (
 
 ## Fast-forward merge
 
-- `main` feature banne ke baad aage nahi badha → merge commit ki zaroorat nahi, pointer bas aage khiskta hai.
+- `main` has not advanced since feature was created → no merge commit needed, the pointer just moves forward.
 
 ```text
 main:     A ── B
@@ -86,11 +86,11 @@ A ── B ── C ── D
           main, feature
 ```
 
-- Rebase + FF merge combo isi pe based hai → [Rebase](./git-rebase.md).
+- The rebase + FF merge combo is based on this → [Rebase](./git-rebase.md).
 
 ## Merge conflict
 
-- Same line dono branches me alag badli → Git decide nahi kar sakta.
+- The same line was changed differently in both branches → Git cannot decide.
 
 ```text
 B (base):    int x = 10;
@@ -99,16 +99,16 @@ B → D:       int x = 50;    (main)
 ```
 
 ```bash
-# files me conflict markers fix karo
+# fix the conflict markers in the files
 git add <files>
-git commit          # ye commit hi merge commit ban jaata hai
+git commit          # this commit itself becomes the merge commit
 ```
 
-- Rebase conflict me `git commit` ki jagah `git rebase --continue`.
+- For a rebase conflict, use `git rebase --continue` instead of `git commit`.
 
-## Doubt — Merge ke baad main me order `<main> → <feature> → <merge>` hi hota hai?
+## Doubt — After a merge, is the order in main always `<main> → <feature> → <merge>`?
 
-**Nahi.** Graph structure aur `git log` ka display order do alag cheezein hain.
+**No.** Graph structure and `git log` display order are two different things.
 
 ```text
 A ── B ── D ── E ── M       main
@@ -116,9 +116,9 @@ A ── B ── D ── E ── M       main
       C ── F ── G ─┘
 ```
 
-- Git ko sirf ye pata: `E → D → B → A`, `G → F → C → B → A`, `M` ke parents = `E, G`.
-- `E` aur `G` ke beech **koi parent-child relation nahi** — parallel lines.
-- Chronologically commits **mix** ho sakte hain:
+- Git only knows: `E → D → B → A`, `G → F → C → B → A`, `M`'s parents = `E, G`.
+- There is **no parent-child relation** between `E` and `G` — they are parallel lines.
+- Chronologically, commits can be **interleaved**:
 
 ```text
 B   10:00
@@ -130,10 +130,10 @@ G   10:25   (feature)
 M   10:30
 ```
 
-- `git log` timestamp nahi, **parent links** follow karta hai → **topological order** (descendant se pehle ancestor nahi dikhega, baaki order Git ke traversal pe). Dono valid:
+- `git log` follows **parent links**, not timestamps → **topological order** (no ancestor is shown before its descendant; the rest of the order depends on Git's traversal). Both are valid:
 
 ```text
-M E D G F C B A      ya      M G F E D C B A
+M E D G F C B A      or      M G F E D C B A
 ```
 
 ```bash
@@ -153,32 +153,32 @@ git log --graph --oneline --all
 * A
 ```
 
-> Git history **DAG** hai, list nahi. Parent chain ke andar order fixed; alag branches ke commits ka aapas me koi order nahi. **Parent relationship ≠ timestamp.**
+> Git history is a **DAG**, not a list. Order is fixed within a parent chain; commits on different branches have no order relative to each other. **Parent relationship ≠ timestamp.**
 
-## Doubt — Merge aur squash dono ek commit banate hain, farq kya?
+## Doubt — Merge and squash both create one commit; what is the difference?
 
-- Merge commit `M` feature commits ko **replace nahi karta** — `C, F, G` main me reachable rehte hain, `M` bas jodta hai.
+- Merge commit `M` **does not replace** the feature commits — `C, F, G` remain reachable from main; `M` just joins them.
 
 ```text
-Normal merge:  A ── B ── D ── E ── M       (main me B D E C F G M sab reachable)
+Normal merge:  A ── B ── D ── E ── M       (B D E C F G M all reachable from main)
                     \             /
                      C ── F ── G
 
-Squash:        A ── B ── D ── E ── S       (S = C+F+G ka combined effect, C F G main me nahi)
+Squash:        A ── B ── D ── E ── S       (S = combined effect of C+F+G; C F G not in main)
 ```
 
-- **Merge = "existing commits main me le aao"**, **Squash = "final changes ka naya commit banao"** → [Squash](./git-squash.md).
+- **Merge = "bring existing commits into main"**, **Squash = "create a new commit with the final changes"** → [Squash](./git-squash.md).
 
-## Merge commit undo
+## Undoing a merge commit
 
-- 2 parents → mainline batana padta hai:
+- 2 parents → you must specify the mainline:
 
 ```bash
-git revert -m 1 M      # parent 1 (main side) ko mainline maano
+git revert -m 1 M      # treat parent 1 (main side) as mainline
 ```
 
 ## Interview lines
 
-- **Merge vs rebase:** Merge existing history preserve karke combine karta hai (FF na ho toh merge commit). Rebase commits naye base pe replay karta hai → linear, par hashes badalte hain.
-- **Common ancestor:** dono branches ka ancestor; three-way merge jo use karta hai = merge base.
-- **Order:** alag branches ke commits ka aapas me order nahi hota, sirf parent chain me.
+- **Merge vs rebase:** Merge combines while preserving existing history (merge commit if not FF). Rebase replays commits onto a new base → linear, but hashes change.
+- **Common ancestor:** an ancestor of both branches; the one used by a three-way merge = merge base.
+- **Order:** commits on different branches have no order relative to each other, only within a parent chain.
