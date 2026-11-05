@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Git Reset, Revert &amp; Re-apply</title>
+  <link rel="stylesheet" href="../assets/notes.css">
+  <script defer src="../assets/notes.js"></script>
+</head>
+<body>
+  <nav class="topbar">
+    <div class="crumbs">
+      <a href="../topics.html">Topics</a><span>/</span>
+      <a href="../tables/git.table.html">GIT</a>
+    </div>
+    <div class="spacer"></div>
+    <button class="icon-btn" type="button" data-theme-toggle>◐ Auto</button>
+  </nav>
+
+  <div class="page has-toc">
+    <article>
+      <header class="note-header">
+        <h1>Git Reset, Revert &amp; Re-apply</h1>
+        <ul class="meta">
+          <li><b>Topic</b>GIT</li>
+          <li><b>Date</b>20 Sep 2026</li>
+        </ul>
+      </header>
+
+      <div class="callout info">
+        <span class="callout-title">Related</span>
+        <p><a href="./git-merge.html">Merge</a>, <a href="./git-rebase.html">Rebase</a>, <a href="./git-squash.html">Squash</a>, <a href="./git-cherry-pick.html">Cherry-pick</a>.</p>
+      </div>
+
+      <section>
+        <h2>Git can change 3 things</h2>
+<pre class="ascii">1. Commit history            (which commits are in the graph)
+2. Branch pointer / HEAD     (which commit my branch points to)
+3. Staging area + Working directory   (my actual files and staged changes)</pre>
+<pre class="ascii">Working Directory      ← your actual files
+       ↓ git add
+Staging Area (INDEX)   ← what goes into the next commit
+       ↓ git commit
+Commit History         ← permanent record</pre>
+        <ul>
+          <li>For each command, ask: which of the three changed?</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2><code>git revert</code> — create an undo commit</h2>
+<pre class="ascii">A ── B ── C ── D          C has a bug
+              ↑
+             main
+
+git revert C
+
+A ── B ── C ── D ── R     R = inverse of C (reverses C's changes)
+                    ↑
+                   main</pre>
+        <ul>
+          <li><code>C</code> continues to exist; no history rewrite → <strong>safe on shared branches</strong>.</li>
+          <li>Do not <code>reset --hard B</code> on shared main (breaks everyone's history); do <code>revert C</code> → everyone pulls <code>R</code>.</li>
+        </ul>
+
+        <h3>Reverting a merge commit</h3>
+        <div class="code" data-lang="bash"><pre><code>git revert -m 1 M      <span class="cm"># parent 1 = the branch that was merged into (main side)</span></code></pre></div>
+        <ul>
+          <li>2 parents → you must specify the mainline; the merge's changes are reversed relative to that parent.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2><code>git reset</code> — move the branch pointer</h2>
+<pre class="ascii">A ── B ── C ── D          git reset B
+              ↑
+             main
+
+A ── B                    main moved back
+     ↑
+    main
+     C ── D               (now unreachable from main)</pre>
+        <ul>
+          <li>Rewrites local history. The mode decides what happens to <strong>staging + working dir</strong>.</li>
+        </ul>
+
+        <h3><code>--soft</code> — move pointer, changes staged</h3>
+        <div class="code" data-lang="bash"><pre><code>git reset --soft B</code></pre></div>
+<pre class="ascii">A ── B ── C ── D     "C and D should have been one commit"
+
+git reset --soft B   → pointer at B, C+D changes STAGED
+git commit -m "Implement feature"
+
+A ── B ── X          C+D replaced by X</pre>
+        <div class="code" data-lang="bash"><pre><code>git reset --soft HEAD~1     <span class="cm"># forgot a file in the last commit</span>
+git add forgotten_file
+git commit                  <span class="cm"># creates corrected C'</span></code></pre></div>
+
+        <h3><code>--mixed</code> (default) — move pointer, changes unstaged</h3>
+        <div class="code" data-lang="text"><pre><code>Commit history:     B
+Staging area:       empty
+Working directory:  changes from C + D</code></pre></div>
+        <ul>
+          <li>Now selectively <code>git add &lt;files&gt;</code> and create new commits.</li>
+        </ul>
+
+        <h3><code>--hard</code> — move pointer, discard changes</h3>
+        <div class="code" data-lang="bash"><pre><code>git reset --hard B</code></pre></div>
+        <div class="callout danger">
+          <span class="callout-title">Data loss</span>
+          <p>Staging + working dir also match <code>B</code>. Changes from <code>C, D</code> and uncommitted work are <strong>gone</strong>.</p>
+        </div>
+
+        <h3>Table</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Command</th><th>Branch pointer</th><th>Staging (INDEX)</th><th>Working files</th></tr></thead>
+            <tbody>
+              <tr><td><code>reset --soft B</code></td><td>at <code>B</code></td><td><strong>kept</strong> (staged)</td><td>kept</td></tr>
+              <tr><td><code>reset --mixed B</code></td><td>at <code>B</code></td><td><strong>reset</strong> (unstaged)</td><td>kept</td></tr>
+              <tr><td><code>reset --hard B</code></td><td>at <code>B</code></td><td><strong>reset</strong></td><td><strong>reset</strong> (changes gone)</td></tr>
+            </tbody>
+          </table>
+        </div>
+<pre class="ascii">             HEAD    INDEX    WORKTREE
+--soft        ✓      KEEP      KEEP
+--mixed       ✓      RESET     KEEP
+--hard        ✓      RESET     RESET</pre>
+      </section>
+
+      <section>
+        <h2>Reset vs Revert</h2>
+<pre class="ascii">Reset:   A ── B ── C ── D   →   A ── B              (pointer moved back, history rewritten)
+Revert:  A ── B ── C ── D   →   A ── B ── C ── D ── R  (history intact, undo commit added)</pre>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th></th><th>Reset</th><th>Revert</th></tr></thead>
+            <tbody>
+              <tr><td>Purpose</td><td>Move pointer</td><td>New undo commit</td></tr>
+              <tr><td>History</td><td>Rewritten</td><td>Intact</td></tr>
+              <tr><td>Old commit</td><td>Unreachable</td><td>Still exists</td></tr>
+              <tr><td>Where</td><td><strong>Local / private</strong></td><td><strong>Shared / public</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2>Reset vs Rebase</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th></th><th>Reset</th><th>Rebase</th></tr></thead>
+            <tbody>
+              <tr><td>Purpose</td><td>Point the pointer elsewhere</td><td><strong>Replay</strong> commits onto another base</td></tr>
+              <tr><td>New commits</td><td>No</td><td>Yes (<code>D'</code>, <code>E'</code>)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2><code>git reflog</code> — recovery</h2>
+        <ul>
+          <li><code>git log</code> = reachable commits; <code>git reflog</code> = <strong>everywhere HEAD has pointed</strong>.</li>
+        </ul>
+        <div class="code" data-lang="bash"><pre><code>git reflog</code></pre></div>
+        <div class="code" data-lang="text"><pre><code>abc123 HEAD@{0}: reset: moving to HEAD~3
+def456 HEAD@{1}: commit: Add payment API
+ghi789 HEAD@{2}: commit: Add validation</code></pre></div>
+        <div class="code" data-lang="bash"><pre><code>git reset --hard def456     <span class="cm"># recovered</span></code></pre></div>
+      </section>
+
+      <section>
+        <h2><code>git commit --amend</code> — replace the last commit</h2>
+        <div class="code" data-lang="bash"><pre><code>git add forgotten_file
+git commit --amend</code></pre></div>
+<pre class="ascii">Before:  A ── B ── C
+After:   A ── B ── C'      (C ≠ C', commit was replaced)</pre>
+        <div class="callout warn">
+          <span class="callout-title">Gotcha</span>
+          <p>Only on an <strong>unpushed</strong> commit; on a pushed one = history rewrite.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2><code>git restore</code> / <code>git switch</code></h2>
+        <div class="code" data-lang="text"><pre><code>git switch   → change branches
+git restore  → restore / unstage files</code></pre></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Task</th><th>Old</th><th>New</th></tr></thead>
+            <tbody>
+              <tr><td>Switch branch</td><td><code>git checkout feature</code></td><td><code>git switch feature</code></td></tr>
+              <tr><td>Discard a file's local changes</td><td><code>git checkout -- foo.cpp</code></td><td><code>git restore foo.cpp</code></td></tr>
+              <tr><td>Unstage a file (keep changes)</td><td><code>git reset foo.cpp</code></td><td><code>git restore --staged foo.cpp</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul>
+          <li><code>restore --staged</code>: HEAD unchanged, working dir modified, staging clean.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>"Re-apply"</h2>
+        <ul>
+          <li><code>git reapply</code> is not a command. Two meanings:
+            <ul>
+              <li><strong>Apply a commit again</strong> → <code>git cherry-pick &lt;commit&gt;</code> → <a href="./git-cherry-pick.html">Cherry-pick</a>.</li>
+              <li><strong>Replaying commits in a rebase</strong> → <a href="./git-rebase.html">Rebase</a>:</li>
+            </ul>
+          </li>
+        </ul>
+<pre class="ascii">Before:  A ── B ── C          After rebase:  A ── B ── C ── D' ── E'
+              \
+               D ── E</pre>
+      </section>
+
+      <section>
+        <h2>Cheat sheet</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Operation</th><th>Mental model</th></tr></thead>
+            <tbody>
+              <tr><td><code>revert</code></td><td>Create a commit that undoes another commit</td></tr>
+              <tr><td><code>reset</code></td><td>Move branch pointer</td></tr>
+              <tr><td><code>reset --soft</code></td><td>Move pointer, changes staged</td></tr>
+              <tr><td><code>reset --mixed</code></td><td>Move pointer, changes unstaged</td></tr>
+              <tr><td><code>reset --hard</code></td><td>Move pointer, discard changes</td></tr>
+              <tr><td><code>restore</code></td><td>Restore / unstage files</td></tr>
+              <tr><td><code>amend</code></td><td>Replace the latest commit</td></tr>
+              <tr><td><code>reflog</code></td><td>Previous positions of HEAD</td></tr>
+              <tr><td><code>switch</code> / <code>checkout</code></td><td>Change branch</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2>Scenarios</h2>
+        <ol>
+          <li><strong>Bad commit <code>C</code> on shared main</strong> → <code>git revert C</code>.</li>
+          <li><strong>Combine local <code>C, D, E</code> into one commit</strong> → <code>git reset --soft B &amp;&amp; git commit</code> or <code>git rebase -i B</code>.</li>
+          <li><strong>Forgot a file in the unpushed last commit</strong> → <code>git commit --amend</code>.</li>
+          <li><strong>Staged a file by mistake</strong> → <code>git restore --staged &lt;file&gt;</code>.</li>
+          <li><strong>Wiped out local history</strong> → <code>git reflog</code> → <code>git reset --hard &lt;commit&gt;</code>.</li>
+        </ol>
+<pre class="ascii">                  WHAT AM I TRYING TO DO?
+                            │
+           ┌────────────────┼─────────────────┐
+           ↓                ↓                 ↓
+     Change history    Undo changes      Copy changes
+           │                │                 │
+     ┌─────┴─────┐          │          ┌──────┴──────┐
+     ↓           ↓          ↓          ↓             ↓
+   reset       rebase     revert    cherry-pick     merge</pre>
+        <div class="callout key">
+          <span class="callout-title">Key takeaway</span>
+          <p><code>reset</code> and <code>rebase</code> <strong>rewrite</strong> history; <code>revert</code> <strong>preserves</strong> history (adds a new commit). On shared main, this distinction matters most.</p>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <a href="../tables/git.table.html">← Back to GIT</a>
+        <span>my-notes</span>
+      </footer>
+    </article>
+    <aside class="toc" aria-label="Table of contents"></aside>
+  </div>
+</body>
+</html>

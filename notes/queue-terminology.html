@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Queue Terminology</title>
+  <link rel="stylesheet" href="../assets/notes.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+  <script defer src="../assets/notes.js"></script>
+</head>
+<body>
+  <nav class="topbar">
+    <div class="crumbs">
+      <a href="../topics.html">Topics</a><span>/</span>
+      <a href="../tables/system-design.table.html">SYSTEM DESIGN</a>
+    </div>
+    <div class="spacer"></div>
+    <button class="icon-btn" type="button" data-theme-toggle>◐ Auto</button>
+  </nav>
+
+  <div class="page has-toc">
+    <article>
+      <header class="note-header">
+        <h1>Queue Terminology</h1>
+        <ul class="meta">
+          <li><b>Topic</b>SYSTEM DESIGN</li>
+          <li><b>Date</b>04 Nov 2026</li>
+        </ul>
+      </header>
+
+      <section>
+        <h2>What &amp; Why</h2>
+        <ul>
+          <li>Quick reference for the common <strong>queue types</strong> and <strong>processing terms</strong> used in backend messaging systems (<code>RabbitMQ</code>, <code>Kafka</code>, <code>AWS SQS</code>, <code>BullMQ</code>, etc.).</li>
+          <li>The concepts are the same across systems; only the naming and implementation differ slightly.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Main Queue Types</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Queue</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Main Queue</strong></td><td>Newly arrived jobs/messages wait here to be processed.</td></tr>
+              <tr><td><strong>Retry Queue</strong></td><td>Failed messages are routed here so they can be retried.</td></tr>
+              <tr><td><strong>DLQ</strong> (Dead Letter Queue)</td><td>Messages that failed permanently or exhausted all retries are parked here.</td></tr>
+              <tr><td><strong>Delay Queue</strong></td><td>Holds a message until its scheduled processing time arrives.</td></tr>
+              <tr><td><strong>Priority Queue</strong></td><td>High-priority messages are processed first, low-priority ones later.</td></tr>
+              <tr><td><strong>FIFO Queue</strong></td><td>First-In-First-Out — whatever arrives first is processed first (ordering guaranteed).</td></tr>
+              <tr><td><strong>Parking Queue</strong></td><td>Temporarily holds messages for manual investigation or later reprocessing.</td></tr>
+              <tr><td><strong>Scheduled Queue</strong></td><td>Jobs that must execute at a specific future time.</td></tr>
+              <tr><td><strong>Reply Queue</strong></td><td>Receives responses in the request-response pattern.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout info">
+          <span class="callout-title">Delay vs Scheduled</span>
+          <p>Delay = "run after this much time" (relative); Scheduled = "run at this exact time" (absolute). In practice the two overlap significantly.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Important Processing Concepts</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Producer</strong></td><td>Publishes messages to the queue.</td></tr>
+              <tr><td><strong>Consumer / Worker</strong></td><td>Reads messages from the queue and processes them.</td></tr>
+              <tr><td><strong>ACK</strong> (Acknowledgement)</td><td>Confirms the message was processed successfully → remove it from the queue.</td></tr>
+              <tr><td><strong>NACK</strong> (Negative ACK)</td><td>Signals that processing failed → retry / DLQ.</td></tr>
+              <tr><td><strong>Visibility Timeout</strong></td><td>While a worker is processing a message, it stays hidden from other workers (e.g. <code>SQS</code>).</td></tr>
+              <tr><td><strong>Message TTL</strong></td><td>How long a message remains valid — after that it expires (and often moves to the DLQ).</td></tr>
+              <tr><td><strong>Prefetch Count</strong></td><td>Max number of <strong>unacknowledged</strong> messages a consumer can receive at once (e.g. <code>RabbitMQ</code>).</td></tr>
+              <tr><td><strong>Backoff</strong></td><td>Progressively increase the delay between retries (e.g. 1s → 2s → 4s → 8s).</td></tr>
+              <tr><td><strong>Consumer Group</strong></td><td>A group of consumers that share and jointly process a topic's messages (<code>Kafka</code>).</td></tr>
+              <tr><td><strong>Idempotent Consumer</strong></td><td>Receiving the same message again does not duplicate side effects (e.g. a payment is not charged twice).</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2>Typical Message Processing Flow</h2>
+        <figure class="diagram">
+<pre class="mermaid">
+flowchart TD
+    P[Producer] --&gt; MQ[Main Queue&lt;br/&gt;pending messages]
+    MQ --&gt; C[Consumer / Worker]
+    C --&gt;|Success| ACK[ACK → message removed]
+    C --&gt;|Failure| NACK[NACK / Retry]
+    NACK --&gt; RQ[Retry Queue&lt;br/&gt;retry after backoff]
+    RQ --&gt;|Retry| C
+    RQ --&gt;|Retries exhausted| DLQ[DLQ&lt;br/&gt;investigation]
+</pre>
+          <figcaption>Main queue → consumer → ACK on success, retry with backoff on failure, DLQ when retries are exhausted</figcaption>
+        </figure>
+        <ol class="steps">
+          <li><strong>Producer</strong> puts the message into the <strong>Main Queue</strong>.</li>
+          <li><strong>Consumer</strong> picks up the message and processes it.</li>
+          <li>Success → <strong>ACK</strong> → message removed from the queue.</li>
+          <li>Failure → <strong>NACK</strong> → moved to the <strong>Retry Queue</strong>, retried after backoff.</li>
+          <li>Retries exhausted → moved to the <strong>DLQ</strong> for manual investigation.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Top 5 Concepts for Interviews</h2>
+        <div class="callout key">
+          <span class="callout-title">Top 5 for interviews</span>
+          <ol>
+            <li><strong>DLQ</strong> — repeatedly failing ("poison") messages do not block normal processing.</li>
+            <li><strong>Retry with exponential backoff</strong> — prevents further overloading an already unhealthy downstream service.</li>
+            <li><strong>Idempotent consumers</strong> — duplicate delivery does not cause duplicate side effects.</li>
+            <li><strong>ACK / NACK</strong> — determines whether a message is considered successfully processed.</li>
+            <li><strong>Visibility timeout</strong> — under normal conditions, two workers do not process the same in-flight <code>SQS</code> message.</li>
+          </ol>
+        </div>
+        <div class="callout warn">
+          <span class="callout-title">Gotcha</span>
+          <p>Most messaging systems provide <strong>at-least-once delivery</strong> — duplicates are possible. Always design consumers to be <strong>idempotent</strong>.</p>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <a href="../tables/system-design.table.html">← Back to SYSTEM DESIGN</a>
+        <span>my-notes</span>
+      </footer>
+    </article>
+    <aside class="toc" aria-label="Table of contents"></aside>
+  </div>
+</body>
+</html>

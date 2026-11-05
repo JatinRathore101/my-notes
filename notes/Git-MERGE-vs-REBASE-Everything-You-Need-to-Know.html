@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Git MERGE vs REBASE: Everything You Need to Know</title>
+  <link rel="stylesheet" href="../assets/notes.css">
+  <script defer src="../assets/notes.js"></script>
+</head>
+<body>
+  <nav class="topbar">
+    <div class="crumbs">
+      <a href="../topics.html">Topics</a><span>/</span>
+      <a href="../tables/git.table.html">GIT</a>
+    </div>
+    <div class="spacer"></div>
+    <button class="icon-btn" type="button" data-theme-toggle>◐ Auto</button>
+  </nav>
+
+  <div class="page has-toc">
+    <article>
+      <header class="note-header">
+        <h1>Git MERGE vs REBASE: Everything You Need to Know</h1>
+        <ul class="meta">
+          <li><b>Topic</b>GIT</li>
+          <li><b>Video</b><a href="https://www.youtube.com/watch?v=0chZFIZLR_0">Git MERGE vs REBASE: Everything You Need to Know</a></li>
+          <li><b>Date</b>20 Sep 2026</li>
+        </ul>
+      </header>
+
+      <section>
+        <h2>What &amp; Why</h2>
+        <ul>
+          <li>In a project with multiple branches, two questions keep coming up:
+            <ol>
+              <li>How do you keep a feature branch <strong>up to date with main</strong>?</li>
+              <li>Once the feature is ready, how do you <strong>bring it back into main</strong>?</li>
+            </ol>
+          </li>
+          <li>Both questions have three answers — <code>git merge</code>, <code>git rebase</code>, and <strong>squash commits</strong>.</li>
+          <li>All three do the same job (combine changes); the only difference is <strong>what the commit history looks like</strong>.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Setup — Example Scenario</h2>
+        <ul>
+          <li>A new <strong>feature branch</strong> is created from <code>main</code>.</li>
+          <li>Commits <strong>A, B, C</strong> are added on the feature branch.</li>
+          <li>Meanwhile, commits <strong>D, E</strong> are added on <code>main</code>.</li>
+          <li>Think of two branches of a tree growing in different directions.</li>
+        </ul>
+<pre class="ascii">main:     ... ──● ──● D ──● E
+                 \
+feature:          ● A ──● B ──● C</pre>
+      </section>
+
+      <section>
+        <h2>Part 1 — Syncing the feature branch with main</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Command</th><th>What it does</th><th>What the history looks like</th></tr></thead>
+            <tbody>
+              <tr><td><code>git merge</code></td><td>Pulls <code>main</code>'s latest changes into the feature branch and creates a new <strong>merge commit</strong></td><td>The two branches are tied together with a <strong>knot</strong> — an extra commit appears in history</td></tr>
+              <tr><td><code>git rebase</code></td><td><strong>Changes the base</strong> of the feature branch — moves it to main's latest commit, then <strong>replays</strong> its own commits (A, B, C) on top</td><td>Clean, straight (linear) history — no extra merge commit</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul>
+          <li>After a rebase, A, B, C are technically <strong>new commits</strong> (the base changed, so they were replayed).</li>
+          <li>Many people prefer rebase because the history stays straightforward.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Part 2 — Bringing the feature back into main (3 options)</h2>
+
+        <h3>1. Git Merge</h3>
+        <ul>
+          <li>Git creates a new <strong>merge commit</strong> that joins the histories of both branches.</li>
+          <li>Like a knot in a rope — it clearly shows where the branches met.</li>
+          <li>❌ Do this repeatedly and many knots accumulate → history becomes messy.</li>
+        </ul>
+
+        <h3>2. Git Rebase + Fast-Forward Merge</h3>
+        <div class="flow" aria-label="Rebase then fast-forward">
+          <span class="step"><code>git rebase</code> onto main's tip</span><span class="arrow"></span>
+          <span class="step">fast-forward merge</span><span class="arrow"></span>
+          <span class="step accent">linear history</span>
+        </div>
+        <ul>
+          <li>First, use <code>git rebase</code> to move the feature branch's changes onto <strong>the tip of main</strong>.</li>
+          <li>Then do a <strong>fast-forward merge</strong> (no merge commit is created).</li>
+          <li>The rope is pulled straight into a single line — the entire history is <strong>linear</strong>.</li>
+        </ul>
+
+        <h3>3. Squash Commits</h3>
+        <ul>
+          <li><strong>All commits of the feature branch are squashed into a single commit</strong>, which is merged into main.</li>
+          <li>Main's history stays linear (like rebase), and a single merge commit is also created.</li>
+          <li>❌ The <strong>fine-grained details</strong> of individual feature commits are <strong>lost</strong> from main's history.</li>
+          <li>✅ A popular strategy on platforms like GitHub — main stays clean, and the <strong>detailed commit history is preserved on the feature branch</strong>.</li>
+          <li>That is why it is called a <strong>hybrid approach</strong>.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Summary Table</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Strategy</th><th>Main branch history</th><th>Is detail preserved?</th><th>When to use</th></tr></thead>
+            <tbody>
+              <tr><td><code>git merge</code></td><td>With merge commits; full branch evolution is visible</td><td><span class="yes">✓ Yes</span>, fully</td><td>When the team needs the <strong>complete picture</strong> — which branch joined when</td></tr>
+              <tr><td><code>git rebase</code> (+ FF merge)</td><td>Fully linear, clean</td><td><span class="yes">✓</span> Individual commits remain (with new hashes)</td><td>When a <strong>clean, linear history</strong> is needed</td></tr>
+              <tr><td>Squash commits</td><td>Linear, one feature = one commit</td><td><span class="no">✗</span> Not in main (remains on the feature branch)</td><td>When clean history is needed and granular commits in main do not matter</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2>What to choose when</h2>
+        <div class="cards">
+          <div class="card accent"><h4><code>git merge</code></h4><p>Team needs the <strong>complete picture of branch evolution</strong>.</p></div>
+          <div class="card accent"><h4><code>git rebase</code></h4><p>Team needs a <strong>tidy, linear history</strong>.</p></div>
+          <div class="card accent"><h4>Squash</h4><p>Team wants clean history and is fine losing individual commit detail in main.</p></div>
+        </div>
+        <div class="callout key">
+          <span class="callout-title">Key takeaway</span>
+          <p>There is no <strong>one-size-fits-all</strong> answer. Weigh the pros and cons and decide which workflow makes the most sense for the team.</p>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <a href="../tables/git.table.html">← Back to GIT</a>
+        <span>my-notes</span>
+      </footer>
+    </article>
+    <aside class="toc" aria-label="Table of contents"></aside>
+  </div>
+</body>
+</html>

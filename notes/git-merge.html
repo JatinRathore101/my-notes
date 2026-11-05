@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Git Merge</title>
+  <link rel="stylesheet" href="../assets/notes.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+  <script defer src="../assets/notes.js"></script>
+</head>
+<body>
+  <nav class="topbar">
+    <div class="crumbs">
+      <a href="../topics.html">Topics</a><span>/</span>
+      <a href="../tables/git.table.html">GIT</a>
+    </div>
+    <div class="spacer"></div>
+    <button class="icon-btn" type="button" data-theme-toggle>◐ Auto</button>
+  </nav>
+
+  <div class="page has-toc">
+    <article>
+      <header class="note-header">
+        <h1>Git Merge</h1>
+        <ul class="meta">
+          <li><b>Topic</b>GIT</li>
+          <li><b>Date</b>20 Sep 2026</li>
+        </ul>
+      </header>
+
+      <div class="callout info">
+        <span class="callout-title">Related</span>
+        <p><a href="./Git-MERGE-vs-REBASE-Everything-You-Need-to-Know.html">Merge vs Rebase (video)</a>, <a href="./git-squash.html">Squash</a>, <a href="./git-rebase.html">Rebase</a>, <a href="./git-cherry-pick.html">Cherry-pick</a>, <a href="./git-reset-revert-reapply.html">Reset/Revert</a>.</p>
+      </div>
+
+      <section>
+        <h2>Mental model — Git history is a graph</h2>
+        <ul>
+          <li>Merge/rebase/squash = <strong>different ways to build/rewrite the commit graph</strong>, not just commands that "combine changes".</li>
+        </ul>
+
+        <h3>Commit</h3>
+<pre class="ascii">Commit
+├── snapshot / tree      (state of the entire project)
+├── parent commit(s)     (which commit it came after)
+├── author, committer
+├── message
+└── metadata</pre>
+        <ul>
+          <li><strong>Parent</strong> is the most important — it is part of the commit's identity (hash).</li>
+          <li>Normal commit: 1 parent. <strong>Merge commit: 2 parents.</strong></li>
+        </ul>
+
+        <h3>Branch = movable pointer, HEAD = "where am I"</h3>
+<pre class="ascii">A ── B ── C
+          ↑
+       main, feature      ← right after git checkout -b feature
+
+A ── B ── C ── D
+          ↑    ↑
+        main  feature     ← after making one commit on feature</pre>
+        <ul>
+          <li>A branch is not a copy of the code, just a pointer. <code>HEAD → main → C</code>; after switching, <code>HEAD → feature → D</code>.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Ancestor / Common ancestor / Merge base</h2>
+        <ul>
+          <li><strong>Ancestor:</strong> anything reached by following parent links backwards. In <code>A → B → C → D → E</code>, the ancestors of <code>E</code> = <code>D, C, B, A</code> (not <code>E</code> itself).</li>
+          <li><strong>Common ancestor:</strong> an ancestor of both branches. <strong>Merge base</strong> = the most recent common ancestor.</li>
+        </ul>
+<pre class="ascii">             C ── D        feature
+            /
+A ── B ───
+            \
+             E ── F        main</pre>
+        <ul>
+          <li><code>A</code>, <code>B</code> are common ancestors; <code>B</code> is the merge base.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Three-way merge — how it works</h2>
+        <div class="code" data-lang="bash"><pre><code>git checkout main
+git merge feature</code></pre></div>
+        <ol class="steps">
+          <li>Find the merge base (<code>B</code>).</li>
+          <li>What changed in <code>B → D</code> (feature)? What changed in <code>B → F</code> (main)?</li>
+          <li>Combine both → merge commit <code>M</code> (2 parents).</li>
+        </ol>
+        <figure class="diagram">
+<pre class="mermaid">
+gitGraph
+    commit id: "A"
+    commit id: "B"
+    branch feature
+    commit id: "C"
+    commit id: "D"
+    checkout main
+    commit id: "E"
+    commit id: "F"
+    merge feature id: "M"
+</pre>
+          <figcaption>M: parent 1 = F (main), parent 2 = D (feature)</figcaption>
+        </figure>
+        <details>
+          <summary>ASCII version</summary>
+<pre class="ascii">             C ── D
+            /      \
+A ── B ───          M       ← M: parent 1 = F (main), parent 2 = D (feature)
+            \      /
+             E ── F</pre>
+        </details>
+      </section>
+
+      <section>
+        <h2>Fast-forward merge</h2>
+        <ul>
+          <li><code>main</code> has not advanced since feature was created → no merge commit needed, the pointer just moves forward.</li>
+        </ul>
+<pre class="ascii">main:     A ── B
+feature:  A ── B ── C ── D</pre>
+<pre class="ascii">A ── B ── C ── D
+               ↑
+          main, feature</pre>
+        <ul>
+          <li>The rebase + FF merge combo is based on this → <a href="./git-rebase.html">Rebase</a>.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Merge conflict</h2>
+        <ul>
+          <li>The same line was changed differently in both branches → Git cannot decide.</li>
+        </ul>
+        <div class="code" data-lang="text"><pre><code>B (base):    int x = 10;
+B → C:       int x = 20;    (feature)
+B → D:       int x = 50;    (main)</code></pre></div>
+        <div class="code" data-lang="bash"><pre><code><span class="cm"># fix the conflict markers in the files</span>
+git add &lt;files&gt;
+git commit          <span class="cm"># this commit itself becomes the merge commit</span></code></pre></div>
+        <ul>
+          <li>For a rebase conflict, use <code>git rebase --continue</code> instead of <code>git commit</code>.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Doubt — After a merge, is the order in main always <code>&lt;main&gt; → &lt;feature&gt; → &lt;merge&gt;</code>?</h2>
+        <p><strong>No.</strong> Graph structure and <code>git log</code> display order are two different things.</p>
+<pre class="ascii">A ── B ── D ── E ── M       main
+     \             /
+      C ── F ── G ─┘</pre>
+        <ul>
+          <li>Git only knows: <code>E → D → B → A</code>, <code>G → F → C → B → A</code>, <code>M</code>'s parents = <code>E, G</code>.</li>
+          <li>There is <strong>no parent-child relation</strong> between <code>E</code> and <code>G</code> — they are parallel lines.</li>
+          <li>Chronologically, commits can be <strong>interleaved</strong>:</li>
+        </ul>
+        <div class="code" data-lang="text"><pre><code>B   10:00
+C   10:05   (feature)
+D   10:10   (main)
+F   10:15   (feature)
+E   10:20   (main)
+G   10:25   (feature)
+M   10:30</code></pre></div>
+        <ul>
+          <li><code>git log</code> follows <strong>parent links</strong>, not timestamps → <strong>topological order</strong> (no ancestor is shown before its descendant; the rest of the order depends on Git's traversal). Both are valid:</li>
+        </ul>
+        <div class="code" data-lang="text"><pre><code>M E D G F C B A      or      M G F E D C B A</code></pre></div>
+        <div class="code" data-lang="bash"><pre><code>git log --graph --oneline --all</code></pre></div>
+        <div class="code" data-lang="text"><pre><code>*   M
+|\
+| * G
+| * F
+| * C
+* | E
+* | D
+|/
+* B
+* A</code></pre></div>
+        <div class="callout key">
+          <span class="callout-title">Key takeaway</span>
+          <p>Git history is a <strong>DAG</strong>, not a list. Order is fixed within a parent chain; commits on different branches have no order relative to each other. <strong>Parent relationship ≠ timestamp.</strong></p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Doubt — Merge and squash both create one commit; what is the difference?</h2>
+        <ul>
+          <li>Merge commit <code>M</code> <strong>does not replace</strong> the feature commits — <code>C, F, G</code> remain reachable from main; <code>M</code> just joins them.</li>
+        </ul>
+<pre class="ascii">Normal merge:  A ── B ── D ── E ── M       (B D E C F G M all reachable from main)
+                    \             /
+                     C ── F ── G
+
+Squash:        A ── B ── D ── E ── S       (S = combined effect of C+F+G; C F G not in main)</pre>
+        <div class="cards">
+          <div class="card accent"><h4>Merge</h4><p>"Bring existing commits into main"</p></div>
+          <div class="card accent"><h4>Squash</h4><p>"Create a new commit with the final changes" → <a href="./git-squash.html">Squash</a></p></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Undoing a merge commit</h2>
+        <ul>
+          <li>2 parents → you must specify the mainline:</li>
+        </ul>
+        <div class="code" data-lang="bash"><pre><code>git revert -m 1 M      <span class="cm"># treat parent 1 (main side) as mainline</span></code></pre></div>
+      </section>
+
+      <section>
+        <h2>Interview lines</h2>
+        <div class="callout tip">
+          <span class="callout-title">Interview lines</span>
+          <ul>
+            <li><strong>Merge vs rebase:</strong> Merge combines while preserving existing history (merge commit if not FF). Rebase replays commits onto a new base → linear, but hashes change.</li>
+            <li><strong>Common ancestor:</strong> an ancestor of both branches; the one used by a three-way merge = merge base.</li>
+            <li><strong>Order:</strong> commits on different branches have no order relative to each other, only within a parent chain.</li>
+          </ul>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <a href="../tables/git.table.html">← Back to GIT</a>
+        <span>my-notes</span>
+      </footer>
+    </article>
+    <aside class="toc" aria-label="Table of contents"></aside>
+  </div>
+</body>
+</html>

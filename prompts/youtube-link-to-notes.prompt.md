@@ -15,10 +15,10 @@ If I forget to give the **topic**, STOP and ask me for it. Do NOT guess the topi
 
 * **Slug** = lowercase, non-alphanumeric chars replaced with `-`, repeated `-` collapsed, leading/trailing `-` removed.
   * `System Design` / `system_design` / `System-Design` → all become `system-design`.
-  * Slug is used for the index filename: `tables/<topic-slug>.table.md`.
+  * Slug is used for the index filename: `tables/<topic-slug>.table.html`.
 * **Display name** = slug with all non-alphanumeric chars replaced by a space, fully UPPERCASE.
   * `system-design` → `SYSTEM DESIGN`, `lld` → `LLD`.
-  * Display name is used inside the note header, as the index file's H1 heading, and in the `Topic` column of `topics.md`.
+  * Display name is used inside the note header, as the index file's H1 heading, and in the `Topic` column of `topics.html`.
 
 ## IMPORTANT — DO NOT PROCESS THE VIDEO
 
@@ -156,18 +156,20 @@ Use:
 
 Keep the writing **concise but sufficiently explanatory**, in precise technical English (see `CLAUDE.md`).
 
+Use HTML to make the notes richer than plain text can: Mermaid diagrams for flows/sequences/architecture, `.cards` for side-by-side comparisons, callouts for tips/gotchas, `.flow` for short pipelines, `details` for optional deep dives, and images (`assets/img/`) when a visual is genuinely needed. Clarity first — do not decorate.
+
 Do not add large amounts of information that was not covered in the transcript. You may add a small clarification when necessary to make an explanation technically correct or understandable, but clearly prioritize the content of the tutorial.
 
-## MARKDOWN FILE
+## HTML FILE
 
-Create a `.md` file containing the complete study material.
+Create an `.html` file containing the complete study material.
 
 The file must be created inside the `notes/` folder of this repo (flat — no topic subfolders).
 
 The filename must be based on the **exact video title**, with:
 
 * Spaces replaced by `-`
-* `.md` extension added
+* `.html` extension added
 * Remove characters that are invalid/problematic in filenames if necessary
 
 For example:
@@ -177,72 +179,66 @@ Video title:
 "System Design Tutorial - Load Balancing Explained"
 
 Filename:
-System-Design-Tutorial---Load-Balancing-Explained.md
+System-Design-Tutorial---Load-Balancing-Explained.html
 ```
 
-## MARKDOWN STRUCTURE
+## HTML STRUCTURE
 
-The file must start with an H1 title followed by this exact header block:
+* **Start from `assets/note.template.html`** — copy its skeleton and follow the **COMPONENT CHEAT SHEET** in its top comment. Use [`notes/What-happens-when-you-type-a-URL-into-your-browser.html`](../notes/What-happens-when-you-type-a-URL-into-your-browser.html) as the reference example for quality and structure.
+* All styling/behaviour comes from the shared `../assets/notes.css` and `../assets/notes.js` (theme toggle, copy buttons, auto TOC, Mermaid rendering). **Do not** inline a full stylesheet or duplicate those features per page; a small page-specific `<style>` block is allowed only for a genuinely one-off visual.
+* **Remove the template's top comment** (placeholders + cheat sheet) from the generated note.
+* Replace every `{{PLACEHOLDER}}`:
+  * `{{TITLE}}` / `{{VIDEO_TITLE}}` — exact video title (HTML-escaped: `&` → `&amp;`, `<` → `&lt;`).
+  * `{{TOPIC_DISPLAY}}` — the topic **display name** (UPPERCASE form, see INPUTS above).
+  * `{{TOPIC_SLUG}}` — topic slug (used in the breadcrumb and footer back-link to `../tables/<topic-slug>.table.html`).
+  * `{{VIDEO_URL}}` — YouTube URL.
+  * `{{DATE}}` — today's date in `DD MMM YYYY` format.
+* The header (`<header class="note-header">` with H1 + Topic / Video / Date meta pills) must always be present; content starts only after it.
+* Keep the Mermaid `<script>` tag only if the page contains a `<pre class="mermaid">`. Mermaid source starts at column 0 and escapes `&`, `<`, `>` as entities.
+* Escape `&`, `<`, `>` inside all code blocks and ASCII diagrams.
+* Adapt the sections to the actual content. Do not force unnecessary sections.
+* **Validate** before finishing: tag balance (e.g. a quick Python `html.parser` check) and no leaked markdown syntax (```` ``` ````, `**`, `|---|`).
 
-```markdown
-# <Exact Video Title>
-
-- **Topic:** SYSTEM DESIGN
-- **Video:** [<Exact Video Title>](https://www.youtube.com/watch?v=...)
-- **Date:** 06 Sep 2026
-```
-
-- `Topic` — the topic **display name** (UPPERCASE form, see INPUTS above).
-- `Video` — exact video title as link text, YouTube URL as target.
-- `Date` — today's date in `DD MMM YYYY` format.
-- Content starts only after the header block.
-- Adapt the rest of the structure to the actual content. Do not force unnecessary sections.
-
-## UPDATE THE TOPIC INDEX (`tables/<topic-slug>.table.md`)
+## UPDATE THE TOPIC INDEX (`tables/<topic-slug>.table.html`)
 
 After creating the notes file, you MUST record it in that topic's index file inside the **`tables/` folder**.
 
-1. Look for `tables/<topic-slug>.table.md` (e.g. `tables/system-design.table.md`).
-2. **If it exists** — append ONE new row at the end of the table:
-   * `#` — last row's serial number + 1.
-   * `Date` — same date as in the notes file (`DD MMM YYYY`).
-   * `Title` — the exact video title. Escape any `|` as `\|` so the table does not break.
-   * `Web link` — `[Watch](<youtube-url>)`.
-   * `Link to file` — clickable relative link, e.g. `[Open notes](../notes/<filename>.md)`. The path is relative to the `tables/` folder, hence `../notes/` (NOT `./notes/`).
-   * Do NOT modify, reorder, or renumber existing rows — only append.
-3. **If it does not exist** — create it with the topic display name as H1, the table header, and this note as row `1`:
+1. Look for `tables/<topic-slug>.table.html` (e.g. `tables/system-design.table.html`).
+2. **If it exists** — append ONE new `<tr>` directly above the `<!-- ROWS END … -->` comment in `<tbody>`:
 
-   ```markdown
-   # SYSTEM DESIGN
-
-   | # | Date | Title | Web link | Link to file |
-   |---|------|-------|---------------|--------------|
-   | 1 | 06 Sep 2026 | <Video Title> | [Watch](<youtube-url>) | [Open notes](../notes/<filename>.md) |
+   ```html
+   <tr><td class="num">5</td><td class="nowrap">06 Sep 2026</td><td>Video Title</td><td><a href="https://www.youtube.com/watch?v=..." target="_blank" rel="noopener">Watch</a></td><td><a href="../notes/<filename>.html" class="open">Open notes</a></td></tr>
    ```
+
+   * `#` (`td.num`) — last row's serial number + 1.
+   * `Date` — same date as in the notes file (`DD MMM YYYY`).
+   * `Title` — the exact video title, HTML-escaped (`&` → `&amp;`, `<` → `&lt;`).
+   * `Web link` — `<a href="<youtube-url>" target="_blank" rel="noopener">Watch</a>`.
+   * `Link to file` — `<a href="../notes/<filename>.html" class="open">Open notes</a>`. The path is relative to the `tables/` folder, hence `../notes/` (NOT `./notes/`).
+   * Do NOT modify, reorder, or renumber existing rows — only append.
+3. **If it does not exist** — copy an existing `tables/*.table.html` as the skeleton (head, topbar, `index-page` main, table header, `ROWS END` comment), set `<title>`, the breadcrumb label and the `<h1>` to the topic display name, and put this note in as row `1`.
 
 * Index files always live inside `tables/`, never at the repo root or inside `notes/`.
 * Never create a new index file for a topic that already has one — check first.
+* The header row is fixed: `# | Date | Title | Web link | Link to file`. Never add/remove/rename columns.
 * **Duplicate check:** before adding the row, check whether the same YouTube URL already exists in that table. If it does, do not create the notes file — STOP and tell me it already exists at row `#N`.
-* The same table may also contain **direct (unprocessed) web link** rows — their `Web link` is `[Link](...)` and `Link to file` is empty (see [store-direct-link.prompt.md](./store-direct-link.prompt.md)).
-  * The `#` serial number runs as a single sequence across both row types — take the last row's number + 1, even if it is a direct-link row.
-  * Do not modify or renumber those rows. Columns always remain `# | Date | Title | Web link | Link to file`.
+* The same table may also contain **direct (unprocessed) web link** rows — their `Web link` is `<a …>Link</a>` and `Link to file` is an empty `<td></td>` (see [store-direct-link.prompt.md](./store-direct-link.prompt.md)). Notes without a video have an empty `Web link` cell.
+  * The `#` serial number runs as a single sequence across all row types — take the last row's number + 1, even if it is a direct-link row.
+  * Do not modify or renumber those rows.
 
-## UPDATE `topics.md` (only for a brand-new topic)
+## UPDATE `topics.html` (only for a brand-new topic)
 
-* `topics.md` (repo root) is the table of contents of all topics — columns `# | Topic | Link to table`, one row per file in `tables/`.
-* If you had to **create** the `tables/<topic-slug>.table.md` file (i.e. this is the repo's first note for that topic), append ONE row at the end of `topics.md`:
-  * `#` — last row + 1.
-  * `Topic` — the topic display name (UPPERCASE).
-  * `Link to table` — `[<topic-slug>.table.md](./tables/<topic-slug>.table.md)`.
+* `topics.html` (repo root) is the table of contents of all topics — columns `# | Topic | Link to table`, one row per file in `tables/`.
+* If you had to **create** the `tables/<topic-slug>.table.html` file (i.e. this is the repo's first note for that topic), append ONE `<tr>` directly above the `<!-- ROWS END … -->` comment in `topics.html`:
 
-  Example (illustrative — use your own `#`, display name and slug):
-
-  ```markdown
-  | 5 | DBMS | [dbms.table.md](./tables/dbms.table.md) |
+  ```html
+  <tr><td class="num">5</td><td><strong>DBMS</strong></td><td><a class="open" href="./tables/dbms.table.html">dbms.table.html</a></td></tr>
   ```
 
-* Do NOT edit, reorder or renumber existing rows in `topics.md`.
-* If the topic's index file already existed, **do not touch `topics.md`** at all.
+  (illustrative — use your own `#`, display name and slug)
+
+* Do NOT edit, reorder or renumber existing rows in `topics.html`.
+* If the topic's index file already existed, **do not touch `topics.html`** at all.
 
 ## TOKEN/CREDIT EFFICIENCY
 
@@ -261,20 +257,20 @@ Fetch existing PUBLIC TRANSCRIPT/CAPTIONS (yt-dlp, ios player client)
     ↓
 Claude processes ONLY the transcript
     ↓
-Generate study notes
+Generate study notes (HTML)
     ↓
-Save as notes/<video-title>.md
+Save as notes/<video-title>.html (from assets/note.template.html)
     ↓
-Append row to tables/<topic-slug>.table.md (create if missing)
+Append row to tables/<topic-slug>.table.html (create if missing)
     ↓
-If topic was new → append row to topics.md
+If topic was new → append row to topics.html
 ```
 
 **Never use the video itself as input to Claude.**
 
 **Never run git commands** — no `git add`, no commit, no stage/unstage. I handle git manually.
 
-Do not unnecessarily reproduce the raw transcript in the conversation. The final `.md` file should contain the **cleaned study material/notes**, not the raw transcript.
+Do not unnecessarily reproduce the raw transcript in the conversation. The final `.html` file should contain the **cleaned study material/notes**, not the raw transcript.
 
 After successfully creating the file, give me only:
 
@@ -282,6 +278,6 @@ After successfully creating the file, give me only:
 2. The notes file path
 3. The topic slug used
 4. Which index file the row was added to, and whether that index file was newly created
-5. Whether `topics.md` was updated (only happens for a brand-new topic)
+5. Whether `topics.html` was updated (only happens for a brand-new topic)
 
 If the transcript cannot be obtained through a free/public source, explain the problem briefly and do not process the video.

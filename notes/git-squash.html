@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Git Squash</title>
+  <link rel="stylesheet" href="../assets/notes.css">
+  <script defer src="../assets/notes.js"></script>
+</head>
+<body>
+  <nav class="topbar">
+    <div class="crumbs">
+      <a href="../topics.html">Topics</a><span>/</span>
+      <a href="../tables/git.table.html">GIT</a>
+    </div>
+    <div class="spacer"></div>
+    <button class="icon-btn" type="button" data-theme-toggle>◐ Auto</button>
+  </nav>
+
+  <div class="page has-toc">
+    <article>
+      <header class="note-header">
+        <h1>Git Squash</h1>
+        <ul class="meta">
+          <li><b>Topic</b>GIT</li>
+          <li><b>Date</b>20 Sep 2026</li>
+        </ul>
+      </header>
+
+      <div class="callout info">
+        <span class="callout-title">Related</span>
+        <p><a href="./git-merge.html">Merge</a>, <a href="./git-rebase.html">Rebase</a>, <a href="./git-reset-revert-reapply.html">Reset/Revert</a>.</p>
+      </div>
+
+      <section>
+        <h2>What it is</h2>
+        <ul>
+          <li>Changes from multiple commits → <strong>one new single commit</strong> on the target branch.</li>
+        </ul>
+<pre class="ascii">Before:   A ── B ── D ── E          main
+               \
+                C ── F ── G         feature
+
+After:    A ── B ── D ── E ── S     main   (S = net result of C+F+G)</pre>
+      </section>
+
+      <section>
+        <h2>Doubt — What happens to the individual feature commits?</h2>
+        <ul>
+          <li><code>C, F, G</code> <strong>never enter main</strong>; main only knows <code>S</code>.</li>
+          <li><code>S</code> is a new commit with parent <code>E</code> — <strong>no parent link</strong> to <code>C/F/G</code>.</li>
+          <li><code>C, F, G</code> are not deleted; they <strong>stay on the feature branch</strong> as long as the branch exists (hence "hybrid": main stays clean, detail lives on the feature branch).</li>
+          <li>Feature branch deleted → <code>C, F, G</code> become unreachable.</li>
+        </ul>
+        <div class="callout warn">
+          <span class="callout-title">Gotcha</span>
+          <p>No parent link → to Git the branch is not "merged"; <code>git branch -d feature</code> will warn, you must use <code>-D</code>.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Methods</h2>
+
+        <h3>1. GitHub / GitLab "Squash and merge"</h3>
+        <ul>
+          <li><strong>One new commit</strong> on the target, no merge commit.</li>
+        </ul>
+<pre class="ascii">A ── B ── C ── S</pre>
+
+        <h3>2. <code>git merge --squash</code></h3>
+        <div class="code" data-lang="bash"><pre><code>git checkout main
+git merge --squash feature     <span class="cm"># combined changes land in the staging area</span>
+git commit                     <span class="cm"># you create the commit yourself</span></code></pre></div>
+        <div class="callout warn">
+          <span class="callout-title">Correction</span>
+          <p>The claim that squash "also creates a single merge commit" is wrong. <code>S</code> is a normal 1-parent commit, not a 2-parent merge commit.</p>
+        </div>
+
+        <h3>3. Squash local commits (before pushing)</h3>
+        <div class="code" data-lang="bash"><pre><code><span class="cm"># Option A — reset --soft</span>
+git reset --soft B        <span class="cm"># pointer at B, changes from C+D+E stay staged</span>
+git commit -m "Implement feature"
+
+<span class="cm"># Option B — interactive rebase</span>
+git rebase -i B           <span class="cm"># mark commits as pick/squash</span></code></pre></div>
+      </section>
+
+      <section>
+        <h2>Squash vs Merge</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th></th><th>Normal merge</th><th>Squash</th></tr></thead>
+            <tbody>
+              <tr><td>Feature commits in main?</td><td><span class="yes">✓</span> <code>C, F, G</code> reachable</td><td><span class="no">✗</span> Only <code>S</code></td></tr>
+              <tr><td>New commit</td><td>Merge commit <code>M</code> (2 parents)</td><td>Normal commit <code>S</code> (1 parent)</td></tr>
+              <tr><td>Main history</td><td>Branchy</td><td>Linear</td></tr>
+              <tr><td>Link to feature branch</td><td><code>M</code>'s parent is <code>G</code></td><td>No link</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2>Squash vs Rebase</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th></th><th>Rebase</th><th>Squash</th></tr></thead>
+            <tbody>
+              <tr><td>Individual commits preserved?</td><td><span class="yes">✓</span> (<code>E' F' G'</code>)</td><td><span class="no">✗</span> (one <code>S</code>)</td></tr>
+              <tr><td>Hashes</td><td>New</td><td>One new commit</td></tr>
+              <tr><td>Linear?</td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+              <tr><td>Detailed history in main?</td><td><span class="yes">✓</span></td><td><span class="no">✗</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+<pre class="ascii">Rebase:   A ── B ── C ── D ── E' ── F' ── G'
+Squash:   A ── B ── C ── D ── S</pre>
+      </section>
+
+      <section>
+        <h2>Interview line</h2>
+        <div class="callout tip">
+          <span class="callout-title">Interview line</span>
+          <p>A normal merge preserves individual commits and joins them via a merge commit; squash puts all changes into one new commit, and individual feature commits do not enter the target history.</p>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <a href="../tables/git.table.html">← Back to GIT</a>
+        <span>my-notes</span>
+      </footer>
+    </article>
+    <aside class="toc" aria-label="Table of contents"></aside>
+  </div>
+</body>
+</html>

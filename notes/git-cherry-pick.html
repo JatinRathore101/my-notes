@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Git Cherry-pick</title>
+  <link rel="stylesheet" href="../assets/notes.css">
+  <script defer src="../assets/notes.js"></script>
+</head>
+<body>
+  <nav class="topbar">
+    <div class="crumbs">
+      <a href="../topics.html">Topics</a><span>/</span>
+      <a href="../tables/git.table.html">GIT</a>
+    </div>
+    <div class="spacer"></div>
+    <button class="icon-btn" type="button" data-theme-toggle>◐ Auto</button>
+  </nav>
+
+  <div class="page has-toc">
+    <article>
+      <header class="note-header">
+        <h1>Git Cherry-pick</h1>
+        <ul class="meta">
+          <li><b>Topic</b>GIT</li>
+          <li><b>Date</b>20 Sep 2026</li>
+        </ul>
+      </header>
+
+      <div class="callout info">
+        <span class="callout-title">Related</span>
+        <p><a href="./git-merge.html">Merge</a>, <a href="./git-rebase.html">Rebase</a>, <a href="./git-squash.html">Squash</a>, <a href="./git-reset-revert-reapply.html">Reset/Revert</a>.</p>
+      </div>
+
+      <section>
+        <h2>What it is</h2>
+        <ul>
+          <li>Applies <strong>the changes of one specific commit</strong> to the current branch as a <strong>new commit</strong>.</li>
+        </ul>
+<pre class="ascii">main:     A ── B ── C
+feature:  A ── B ── C ── D ── E       only D is needed on main
+
+git checkout main
+git cherry-pick D
+
+main:     A ── B ── C ── D'</pre>
+        <ul>
+          <li><code>D ≠ D'</code> — same changes, different parent → new hash.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Procedure</h2>
+        <ol class="steps">
+          <li>Check out the target branch (where the changes are needed).</li>
+          <li><code>git cherry-pick &lt;hash&gt;</code> — Git applies the commit's diff (relative to its parent) onto HEAD and creates a new commit.</li>
+        </ol>
+        <div class="code" data-lang="bash"><pre><code>git checkout main
+git cherry-pick abc123            <span class="cm"># single commit</span>
+git cherry-pick abc123 def456     <span class="cm"># multiple commits</span></code></pre></div>
+
+        <h3>Conflict</h3>
+        <div class="code" data-lang="bash"><pre><code><span class="cm"># fix the files</span>
+git add &lt;files&gt;
+git cherry-pick --continue
+<span class="cm"># or cancel</span>
+git cherry-pick --abort</code></pre></div>
+      </section>
+
+      <section>
+        <h2>Use cases</h2>
+        <ul>
+          <li><strong>Hotfix:</strong> fix <code>D</code> is on release; it is also needed on main, but <code>E</code> is not.</li>
+          <li><strong>Backport:</strong> apply a fix from main to an older release branch.</li>
+          <li><strong>Commit made on the wrong branch:</strong> cherry-pick it onto the correct branch, reset it off the wrong one.</li>
+        </ul>
+<pre class="ascii">main:      A ── B ── C
+release:   A ── B ── C ── D ── E     D = critical fix, E = not needed
+
+git checkout main
+git cherry-pick D
+
+main:      A ── B ── C ── D'</pre>
+      </section>
+
+      <section>
+        <h2>Cherry-pick vs Merge</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th></th><th>Merge</th><th>Cherry-pick</th></tr></thead>
+            <tbody>
+              <tr><td>Brings in</td><td>The branch's <strong>entire history</strong></td><td>The changes of <strong>one commit</strong></td></tr>
+              <tr><td>Granularity</td><td>branch → branch</td><td>commit → branch</td></tr>
+              <tr><td>New commit</td><td>Merge commit (2 parents) or FF</td><td>Normal commit, new hash</td></tr>
+              <tr><td>Link to original</td><td><code>M</code>'s parent is the original</td><td><strong>No link</strong> — Git does not know <code>D'</code> = <code>D</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout warn">
+          <span class="callout-title">Gotcha</span>
+          <p>Same change in two commits (<code>D</code>, <code>D'</code>) → merging that branch later can cause conflicts/duplicates. If <code>D</code> depends on an earlier commit that is not on the target → conflict.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Merge vs Rebase vs Squash vs Cherry-pick</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Operation</th><th>Main idea</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Merge</strong></td><td>Join two histories</td></tr>
+              <tr><td><strong>Rebase</strong></td><td>Replay my commits onto another base</td></tr>
+              <tr><td><strong>Squash</strong></td><td>Combine multiple commits into one</td></tr>
+              <tr><td><strong>Cherry-pick</strong></td><td>Copy the changes of selected commit(s)</td></tr>
+            </tbody>
+          </table>
+        </div>
+<pre class="ascii">Merge:        A ── B ── C ── D ─────── M
+                   \                  /
+                    E ── F ── G ─────┘
+
+Rebase:       A ── B ── C ── D ── E' ── F' ── G'
+
+Squash:       A ── B ── C ── S
+
+Cherry-pick:  A ── B ── C
+                        \
+                         X        (X = new commit containing the changes of one commit)</pre>
+        <ul>
+          <li>Rebase ≈ cherry-picking all of a branch's commits in sequence.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Interview line</h2>
+        <div class="callout tip">
+          <span class="callout-title">Interview line</span>
+          <p>Applies a specific commit's changes to the current branch as a new commit; used for hotfixes/backports when you do not want to merge the whole branch. A new hash is created.</p>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <a href="../tables/git.table.html">← Back to GIT</a>
+        <span>my-notes</span>
+      </footer>
+    </article>
+    <aside class="toc" aria-label="Table of contents"></aside>
+  </div>
+</body>
+</html>

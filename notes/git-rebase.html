@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Git Rebase</title>
+  <link rel="stylesheet" href="../assets/notes.css">
+  <script defer src="../assets/notes.js"></script>
+</head>
+<body>
+  <nav class="topbar">
+    <div class="crumbs">
+      <a href="../topics.html">Topics</a><span>/</span>
+      <a href="../tables/git.table.html">GIT</a>
+    </div>
+    <div class="spacer"></div>
+    <button class="icon-btn" type="button" data-theme-toggle>◐ Auto</button>
+  </nav>
+
+  <div class="page has-toc">
+    <article>
+      <header class="note-header">
+        <h1>Git Rebase</h1>
+        <ul class="meta">
+          <li><b>Topic</b>GIT</li>
+          <li><b>Date</b>20 Sep 2026</li>
+        </ul>
+      </header>
+
+      <div class="callout info">
+        <span class="callout-title">Related</span>
+        <p><a href="./git-merge.html">Merge</a>, <a href="./git-squash.html">Squash</a>, <a href="./git-reset-revert-reapply.html">Reset/Revert</a>, <a href="./git-cherry-pick.html">Cherry-pick</a>.</p>
+      </div>
+
+      <section>
+        <h2>What it is</h2>
+        <ul>
+          <li><strong>Changing a branch's base</strong> — <strong>replaying</strong> your commits on top of a new base.</li>
+        </ul>
+<pre class="ascii">Before:                 After (git rebase main, on feature):
+             D ── E     feature
+            /
+A ── B ── C                       A ── B ── C ── F ── D' ── E'
+            \                                  ↑          ↑
+             F          main                  main      feature</pre>
+        <ul>
+          <li><code>D ≠ D'</code>, <code>E ≠ E'</code> — new commits. The parent is part of the hash; parent changed <code>C → F</code> → hash changed.</li>
+          <li>Rebase = <strong>history rewrite</strong>, not "merge without a merge commit".</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Doubt — Which direction is correct?</h2>
+        <div class="code" data-lang="bash"><pre><code>git checkout feature
+git rebase main</code></pre></div>
+        <div class="callout key">
+          <span class="callout-title">Rule</span>
+          <p>Check out the branch whose commits you want to move; then <code>rebase &lt;new base&gt;</code>. <code>git rebase main</code> = "rebase the <strong>current branch</strong> onto main"; main is <strong>not</strong> modified.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th></th><th>Command</th><th>Gets modified</th></tr></thead>
+            <tbody>
+              <tr><td>Merge</td><td><code>checkout main</code> → <code>merge feature</code></td><td><strong>main</strong> (checkout TARGET, merge SOURCE)</td></tr>
+              <tr><td>Rebase</td><td><code>checkout feature</code> → <code>rebase main</code></td><td><strong>feature</strong> (checkout SOURCE, rebase TARGET)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul>
+          <li>Shortcut: <strong>Rebase FROM → TO</strong> = <code>git checkout FROM</code> → <code>git rebase TO</code>.</li>
+        </ul>
+
+        <h3>Result of the wrong direction</h3>
+        <div class="code" data-lang="bash"><pre><code>git checkout main
+git rebase feature</code></pre></div>
+<pre class="ascii">A ── B ── C ── D ── E ── F'
+                         ↑
+                        main</pre>
+        <ul>
+          <li>Main's unique commits are replayed on top of feature → main <strong>now depends on feature</strong>, shared history is rewritten. Opposite of the intended result.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Doubt — After rebase, how does the work get into main?</h2>
+        <ul>
+          <li><strong>Rebase by itself puts nothing into main</strong>; it only prepares feature. Two steps:</li>
+        </ul>
+
+        <h3>Step 1 — Rebase (feature moves)</h3>
+        <div class="code" data-lang="bash"><pre><code>git checkout feature
+git rebase main</code></pre></div>
+<pre class="ascii">A ── B ── C ── F ── D' ── E'
+               ↑          ↑
+              main      feature      ← main did not move</pre>
+
+        <h3>Step 2 — Fast-forward merge (main moves)</h3>
+        <div class="code" data-lang="bash"><pre><code>git checkout main
+git merge feature</code></pre></div>
+<pre class="ascii">A ── B ── C ── F ── D' ── E'
+                          ↑
+                     main, feature</pre>
+        <ul>
+          <li>Merging directly without rebase would give:</li>
+        </ul>
+<pre class="ascii">             D ── E
+            /      \
+A ── B ── C ── F ── M          ← with a merge commit, non-linear</pre>
+        <div class="callout key">
+          <span class="callout-title">Key takeaway</span>
+          <p><strong>Rebase = where feature sits; Merge = where main sits.</strong> If you stop after rebase, the work is not in main.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Standard workflow (with remote)</h2>
+        <div class="code" data-lang="bash"><pre><code><span class="cm"># working on feature</span>
+git checkout feature
+
+<span class="cm"># fetch the latest info from remote</span>
+git fetch origin
+
+<span class="cm"># put your work on top of the latest main</span>
+git rebase origin/main
+
+<span class="cm"># if there is a conflict</span>
+git add .
+git rebase --continue
+
+<span class="cm"># push the rebased branch (history was rewritten, so force is required)</span>
+git push --force-with-lease</code></pre></div>
+        <div class="code" data-lang="bash"><pre><code>git checkout main
+git merge feature        <span class="cm"># fast-forward if main has not moved again</span>
+git push origin main</code></pre></div>
+        <div class="callout danger">
+          <span class="callout-title">Force-push</span>
+          <p><code>--force-with-lease</code>: fails if someone pushed to the remote in the meantime — their work is not overwritten. Safer than plain <code>--force</code>.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Conflict handling</h2>
+        <div class="code" data-lang="bash"><pre><code>git status                  <span class="cm"># which files are conflicted</span>
+<span class="cm"># fix the files</span>
+git add &lt;files&gt;
+git rebase --continue       <span class="cm"># replay the next commit</span></code></pre></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Command</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td><code>git rebase --continue</code></td><td>Fix and move on</td></tr>
+              <tr><td><code>git rebase --abort</code></td><td>Cancel, back to the pre-rebase state</td></tr>
+              <tr><td><code>git rebase --skip</code></td><td>Skip the current commit</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul>
+          <li>Merge conflict: <code>git add</code> → <code>git commit</code>. Rebase conflict: <code>git add</code> → <code>git rebase --continue</code>.</li>
+        </ul>
+
+        <h3>Why can conflicts repeat during a rebase?</h3>
+        <div class="cards">
+          <div class="card good"><h4>Merge</h4><p>A single three-way merge (base vs main tip vs feature tip) → if a conflict occurs, it is resolved <strong>at most once</strong>, in one merge commit.</p></div>
+          <div class="card bad"><h4>Rebase</h4><p>Feature's commits are replayed onto the new base <strong>one by one</strong> → <strong>each commit</strong> is its own mini-merge.</p></div>
+        </div>
+<pre class="ascii">A ── B ── C ── F          main
+      \
+       D ── E             feature (2 commits)
+
+Rebase:  F + D  → conflict?  resolve → D'
+         D' + E → conflict?  resolve → E'</pre>
+        <ul>
+          <li>If both <code>D</code> and <code>E</code> touched the same line that <code>F</code> changed, there is a conflict on replaying <code>D</code>, then <strong>again</strong> on replaying <code>E</code> → <code>--continue</code> each time.</li>
+          <li>So a rebase of a 10-commit branch can run the <code>add</code> + <code>--continue</code> cycle 10 times; a merge would settle it all in one go.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2><code>git pull --rebase</code></h2>
+<pre class="ascii">Plain git pull (merge):          git pull --rebase:
+       D                          A ── B ── C ── D'
+      / \
+A ── B ── C ── M</pre>
+        <ul>
+          <li>Preferred on personal feature branches — no useless merge commits are created.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Why it is preferred</h2>
+<pre class="ascii">      /───●──●───\
+ ●───●             ●──●──\
+      \──●──●───/          \
+          \────●────────────●</pre>
+        <ul>
+          <li>A graph like this after a thousand merges vs <code>A ── B ── C ── D ── E ── F' ── G' ── H'</code>.</li>
+          <li><code>git log</code>, <code>git bisect</code>, and debugging become easier. But it is not inherently "better" — it is a workflow choice.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Danger — rewriting shared history</h2>
+        <ul>
+          <li>You pushed <code>D</code>, a teammate pulled it; you rebased → you have <code>D'</code>, they have <code>D</code>. Same code, but different to Git → painful to sync.</li>
+        </ul>
+        <div class="callout danger">
+          <span class="callout-title">Golden rule</span>
+          <p>Do not rebase commits that others are using (main, release, shared feature).</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Rebase vs Reset</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th></th><th>Reset</th><th>Rebase</th></tr></thead>
+            <tbody>
+              <tr><td>Purpose</td><td>Move branch pointer</td><td>Recreate commits on a new base</td></tr>
+              <tr><td>New commits?</td><td>No</td><td>Yes (<code>D'</code>, <code>E'</code>)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2>Interactive rebase</h2>
+        <div class="code" data-lang="bash"><pre><code>git rebase -i B     <span class="cm"># opens a list of all commits after B</span></code></pre></div>
+        <ul>
+          <li><code>pick</code> / <code>squash</code> / <code>reword</code> / <code>drop</code> — local cleanup before pushing.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Interview lines</h2>
+        <div class="callout tip">
+          <span class="callout-title">Interview lines</span>
+          <ul>
+            <li><strong>Why rebase:</strong> clean linear history, avoids unnecessary merge commits. Use on private branches; be careful on shared ones (history rewrite).</li>
+            <li><strong>Feature is behind main:</strong>
+              <div class="code" data-lang="bash"><pre><code>git checkout feature
+git fetch origin
+git rebase origin/main
+<span class="cm"># conflicts → git add . &amp;&amp; git rebase --continue</span>
+git checkout main
+git merge feature      <span class="cm"># usually fast-forward</span></code></pre></div>
+            </li>
+            <li><strong>Which branch is rewritten:</strong> the current (checked-out) one; the name after <code>rebase</code> = the new base.</li>
+          </ul>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <a href="../tables/git.table.html">← Back to GIT</a>
+        <span>my-notes</span>
+      </footer>
+    </article>
+    <aside class="toc" aria-label="Table of contents"></aside>
+  </div>
+</body>
+</html>

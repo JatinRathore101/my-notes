@@ -1,0 +1,125 @@
+<!doctype html>
+<!--
+  NOTE TEMPLATE — copy this file to notes/<filename>.html and replace every {{PLACEHOLDER}}.
+  Delete any component below that the content does not need. Keep the head, topbar,
+  header, footer and <aside class="toc"> exactly as structured here.
+
+  Placeholders:
+    {{TITLE}}          note / exact video title (HTML-escaped: & → &amp;, < → &lt;)
+    {{TOPIC_DISPLAY}}  topic display name, e.g. SYSTEM DESIGN
+    {{TOPIC_SLUG}}     topic slug, e.g. system-design
+    {{VIDEO_URL}}      YouTube URL (remove the whole Video <li> if not from a video)
+    {{VIDEO_TITLE}}    video title as link text
+    {{DATE}}           DD MMM YYYY
+
+  Mermaid: keep the mermaid <script> only if the page contains a <pre class="mermaid">.
+  Mermaid source must start at column 0 inside <pre class="mermaid"> and must not be
+  HTML-escaped except for & < > which must be written as &amp; &lt; &gt;.
+
+  ===================== COMPONENT CHEAT SHEET (all styled by notes.css) =====================
+  Section            <section><h2>…</h2> … </section>      (h3 for sub-sections; TOC is auto-built)
+  Code block         <div class="code" data-lang="bash"><pre><code>…</code></pre></div>
+                       copy button is added automatically; escape & < > inside code;
+                       optional: <span class="cm"># comment</span>, <span class="hl">highlighted line</span>
+  ASCII diagram      <pre class="ascii">…</pre>
+  Mermaid diagram    <figure class="diagram"><pre class="mermaid">…</pre><figcaption>…</figcaption></figure>
+  Image              <figure><img src="../assets/img/<file>.png" alt="…"><figcaption>…</figcaption></figure>
+  Table              <div class="table-wrap"><table><thead>…</thead><tbody>…</tbody></table></div>
+                       cells: <span class="yes">✓ Yes</span> / <span class="no">✗ No</span>
+  Callouts           <div class="callout tip|warn|danger|info|key">
+                       <span class="callout-title">Interview tip</span><p>…</p></div>
+                       tip = interview tip / best practice, warn = gotcha, danger = data-loss / never do,
+                       info = side note, key = key takeaways
+  Cards              <div class="cards"><div class="card good|bad|accent"><h4>…</h4><p>…</p></div>…</div>
+                       use for side-by-side comparison of 2-4 options or pros (good) vs cons (bad)
+  Flow (animated)    <div class="flow"><span class="step accent">A</span><span class="arrow"></span><span class="step">B</span></div>
+                       use for short linear pipelines (≤ 6 steps)
+  Numbered steps     <ol class="steps"><li>…</li></ol>        (badge-numbered process)
+  Collapsible        <details><summary>Deep dive: …</summary><p>…</p></details>
+  Pill / tag         <span class="pill tip|warn|danger">O(1)</span>
+  Keyboard key       <kbd>Ctrl</kbd>
+  Highlight          <mark>…</mark>
+  Reveal animation   add class="reveal" to a block to fade it in on scroll (use sparingly)
+  ==========================================================================================
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{TITLE}}</title>
+  <link rel="stylesheet" href="../assets/notes.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+  <script defer src="../assets/notes.js"></script>
+</head>
+<body>
+  <nav class="topbar">
+    <div class="crumbs">
+      <a href="../topics.html">Topics</a><span>/</span>
+      <a href="../tables/{{TOPIC_SLUG}}.table.html">{{TOPIC_DISPLAY}}</a>
+    </div>
+    <div class="spacer"></div>
+    <button class="icon-btn" type="button" data-theme-toggle>◐ Auto</button>
+  </nav>
+
+  <div class="page has-toc">
+    <article>
+      <header class="note-header">
+        <h1>{{TITLE}}</h1>
+        <ul class="meta">
+          <li><b>Topic</b>{{TOPIC_DISPLAY}}</li>
+          <li><b>Video</b><a href="{{VIDEO_URL}}">{{VIDEO_TITLE}}</a></li>
+          <li><b>Date</b>{{DATE}}</li>
+        </ul>
+      </header>
+
+      <section>
+        <h2>What &amp; Why</h2>
+        <ul>
+          <li>…</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>How It Works</h2>
+        <figure class="diagram">
+<pre class="mermaid">
+flowchart LR
+    A[Client] --> B[Server]
+</pre>
+          <figcaption>…</figcaption>
+        </figure>
+      </section>
+
+      <section>
+        <h2>Trade-offs</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Aspect</th><th>Option A</th><th>Option B</th></tr></thead>
+            <tbody>
+              <tr><td>…</td><td>…</td><td>…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2>When to Use / When Not To</h2>
+        <div class="cards">
+          <div class="card good"><h4>Use when</h4><ul><li>…</li></ul></div>
+          <div class="card bad"><h4>Avoid when</h4><ul><li>…</li></ul></div>
+        </div>
+        <div class="callout tip">
+          <span class="callout-title">Interview tip</span>
+          <p>…</p>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <a href="../tables/{{TOPIC_SLUG}}.table.html">← Back to {{TOPIC_DISPLAY}}</a>
+        <span>my-notes</span>
+      </footer>
+    </article>
+    <aside class="toc" aria-label="Table of contents"></aside>
+  </div>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What happens when you type a URL into your browser?</title>
+  <link rel="stylesheet" href="../assets/notes.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+  <script defer src="../assets/notes.js"></script>
+</head>
+<body>
+  <nav class="topbar">
+    <div class="crumbs">
+      <a href="../topics.html">Topics</a><span>/</span>
+      <a href="../tables/system-design.table.html">SYSTEM DESIGN</a>
+    </div>
+    <div class="spacer"></div>
+    <button class="icon-btn" type="button" data-theme-toggle>◐ Auto</button>
+  </nav>
+
+  <div class="page has-toc">
+    <article>
+      <header class="note-header">
+        <h1>What happens when you type a URL into your browser?</h1>
+        <ul class="meta">
+          <li><b>Topic</b>SYSTEM DESIGN</li>
+          <li><b>Video</b><a href="https://www.youtube.com/watch?v=AlkDbnbv7dk">What happens when you type a URL into your browser? (ByteByteGo)</a></li>
+          <li><b>Date</b>05 Sep 2026</li>
+        </ul>
+      </header>
+
+      <section>
+        <h2>What is a URL?</h2>
+        <p><strong>URL</strong> = Uniform Resource Locator. It has 4 parts:</p>
+        <div class="flow" aria-label="URL anatomy">
+          <span class="step accent"><code>http://</code> scheme</span><span class="arrow"></span>
+          <span class="step"><code>example.com</code> domain</span><span class="arrow"></span>
+          <span class="step"><code>/products/</code> path</span><span class="arrow"></span>
+          <span class="step"><code>phone.html</code> resource</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Part</th><th>Example</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Scheme</strong></td><td><code>http://</code></td><td>Tells the browser which protocol to use. With <code>https://</code> the connection is <strong>encrypted</strong>.</td></tr>
+              <tr><td><strong>Domain</strong></td><td><code>example.com</code></td><td>The site's domain name.</td></tr>
+              <tr><td><strong>Path</strong></td><td><code>/products/</code></td><td>Think of it as a directory on the server.</td></tr>
+              <tr><td><strong>Resource</strong></td><td><code>phone.html</code></td><td>Think of it as a file.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul>
+          <li>The distinction between path and resource is often unclear — simple rule: they map to the <strong>directory and file</strong> of a regular file system. Together they identify which resource to load from the server.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Overall Flow</h2>
+        <figure class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+    participant B as Browser
+    participant D as DNS
+    participant S as Server
+    B->>D: 1. DNS lookup (domain → IP)
+    D-->>B: IP address
+    B->>S: 2. TCP connection (handshake)
+    Note over B,S: For HTTPS, an SSL/TLS handshake too
+    B->>S: 3. HTTP request
+    S-->>B: 4. HTTP response
+    Note over B: 5. Render HTML + fetch remaining resources
+</pre>
+          <figcaption>End-to-end request lifecycle for a single page load</figcaption>
+        </figure>
+      </section>
+
+      <section>
+        <h2>Step 1: DNS Lookup</h2>
+        <ul>
+          <li><strong>DNS (Domain Name System)</strong> = the <strong>phone book</strong> of the internet. Translates a domain name into an <strong>IP address</strong> so the browser can reach the server.</li>
+          <li>To keep lookups fast, DNS info is <strong>heavily cached</strong> — at every level:</li>
+        </ul>
+        <ol class="steps">
+          <li><strong>Browser cache</strong> — the browser itself caches the answer for a short time.</li>
+          <li><strong>OS cache</strong> — if not in the browser cache, the browser asks the operating system; the OS also caches for a short period.</li>
+          <li><strong>DNS resolver</strong> — if the OS doesn't have it either, a query goes to a DNS resolver on the internet. This triggers a chain of requests until the IP is resolved.</li>
+        </ol>
+        <ul>
+          <li><strong>Many servers</strong> in the DNS infrastructure are involved in this process, and the <strong>answer is cached at every step</strong>.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Step 2: TCP Connection</h2>
+        <ul>
+          <li>Once it has the IP address, the browser establishes a <strong>TCP connection</strong> with the server.</li>
+          <li>Establishing a TCP connection involves a <strong>handshake</strong> — this takes <strong>several network round trips</strong> (i.e. it is costly).</li>
+          <li>Hence modern browsers use <strong>keep-alive connections</strong> — an established TCP connection is <strong>reused</strong> repeatedly to keep page loading fast.</li>
+        </ul>
+
+        <h3>Extra Work for HTTPS</h3>
+        <ul>
+          <li>With HTTPS, creating a new connection is even <strong>more expensive</strong> — it requires an <strong>SSL/TLS handshake</strong> that sets up an encrypted connection between browser and server.</li>
+          <li>This handshake is expensive, so browsers use tricks like <strong>SSL session resumption</strong> to reduce the cost (reuse a previous session instead of doing a full handshake).</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Step 3-4: HTTP Request &amp; Response</h2>
+        <ul>
+          <li>The browser sends an <strong>HTTP request</strong> over the established TCP connection.</li>
+          <li>HTTP itself is a <strong>simple protocol</strong>.</li>
+          <li>The server processes the request and sends back a <strong>response</strong>.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Step 5: Rendering &amp; Additional Resources</h2>
+        <ul>
+          <li>The browser receives the response and <strong>renders the HTML content</strong>.</li>
+          <li>Pages often include additional resources — <strong>JavaScript bundles, images</strong>, etc.</li>
+          <li>For each of these, the browser <strong>repeats the same process</strong>: DNS lookup → TCP connection → HTTP request.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Key Takeaways</h2>
+        <div class="callout key">
+          <span class="callout-title">Key takeaways</span>
+          <ul>
+            <li>4 parts of a URL: <strong>scheme, domain, path, resource</strong>.</li>
+            <li><strong>DNS = phone book of the internet</strong>; cached at every layer (browser → OS → resolver) for speed.</li>
+            <li><strong>TCP handshake is costly</strong> → reuse connections via keep-alive.</li>
+            <li><strong>TLS handshake is even costlier</strong> → optimized via SSL session resumption.</li>
+            <li>One page load = this entire cycle <strong>repeated for every resource</strong>.</li>
+          </ul>
+        </div>
+        <div class="callout tip">
+          <span class="callout-title">Interview tip</span>
+          <p>This is a classic interview question. Remember the answer structure — URL parsing → DNS lookup (with caching layers) → TCP (+TLS) handshake → HTTP request/response → render + repeat for resources. Mentioning "how to make it fast" at each step (caching, keep-alive, session resumption) makes for a strong answer.</p>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <a href="../tables/system-design.table.html">← Back to SYSTEM DESIGN</a>
+        <span>my-notes</span>
+      </footer>
+    </article>
+    <aside class="toc" aria-label="Table of contents"></aside>
+  </div>
+</body>
+</html>
