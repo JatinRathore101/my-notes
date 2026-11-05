@@ -4,13 +4,15 @@
    - Copy button on every .code block
    - Auto table of contents from h2/h3 (when an <aside class="toc"> exists)
    - Heading anchors
-   - Mermaid rendering (auto-loads the CDN when a pre.mermaid exists) with theme-aware re-render
+   - Mermaid rendering (auto-loads assets/vendor/mermaid-10.9.1 when a pre.mermaid exists) with theme-aware re-render
    - Reveal-on-scroll for elements with .reveal
    ========================================================================== */
 (function () {
   "use strict";
   var root = document.documentElement;
   var KEY = "my-notes-theme";
+  // URL of this file (assets/notes.js) — base for loading other local assets.
+  var SCRIPT_URL = (document.currentScript && document.currentScript.src) || location.href;
 
   function store(k, v) { try { v === undefined ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} }
   function load(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -95,12 +97,17 @@
     // TOC
     var toc = document.querySelector("aside.toc");
     if (toc && heads.length > 2) {
-      var html = "<h2>On this page</h2><ol>";
+      // Built with DOM APIs (textContent), so heading text is never parsed as HTML.
+      toc.innerHTML = "<h2>On this page</h2>";
+      var ol = document.createElement("ol");
       heads.forEach(function (h) {
-        var text = h.textContent.replace(/#$/, "");
-        html += '<li><a href="#' + h.id + '"' + (h.tagName === "H3" ? ' class="sub"' : "") + ">" + text + "</a></li>";
+        var li = document.createElement("li"), a = document.createElement("a");
+        a.href = "#" + h.id;
+        if (h.tagName === "H3") a.className = "sub";
+        a.textContent = h.textContent.replace(/#$/, "");
+        li.appendChild(a); ol.appendChild(li);
       });
-      toc.innerHTML = html + "</ol>";
+      toc.appendChild(ol);
       var links = toc.querySelectorAll("a");
       if ("IntersectionObserver" in window) {
         var io = new IntersectionObserver(function (entries) {
@@ -129,8 +136,9 @@
     renderMermaid();
   });
 
-  // ---- Mermaid (lazy-loaded from CDN only when the page has a pre.mermaid) ----
-  var MERMAID_CDN = "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js";
+  // ---- Mermaid (lazy-loaded from the local vendored copy only when the page has a pre.mermaid) ----
+  // Resolved relative to this script so it works from notes/, tables/ and the repo root alike.
+  var MERMAID_LOCAL = new URL("vendor/mermaid-10.9.1/mermaid.min.js", SCRIPT_URL).href;
   var mermaidSrc = null, mermaidLoading = false;
   function renderMermaid() {
     var nodes = document.querySelectorAll("pre.mermaid");
@@ -139,7 +147,7 @@
       if (mermaidLoading) return;
       mermaidLoading = true;
       var s = document.createElement("script");
-      s.src = MERMAID_CDN;
+      s.src = MERMAID_LOCAL;
       s.onload = renderMermaid;
       document.head.appendChild(s);
       return;

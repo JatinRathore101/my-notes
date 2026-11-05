@@ -1,5 +1,7 @@
 Use this to **delete one entry** from a topic's HTML index table — remove the row, fix the numbering, and delete the note file attached to that row.
 
+> **Conventions:** topic slug, index-table format, `topics.html`, renumbering and hard rules live in [`notes-conventions.md`](./notes-conventions.md) (§1, §8-§11). **Read it first** — this prompt adds the delete workflow and its confirmation gate.
+
 This flow is **destructive**. Never delete anything without confirmation.
 
 ## INPUTS
@@ -14,19 +16,11 @@ Rules:
 * **Topic** missing — STOP and ask me. Do not guess.
 * **Row number** missing — STOP and ask me. **Do not look up** the row by title or link unless I explicitly give the title.
 * If I give multiple row numbers (e.g. `2, 5`), handle all of them — but **renumber only once, after all deletions**.
-
-### Topic slug + display name
-
-* **Slug** = lowercase, non-alphanumeric chars replaced with `-`, repeated `-` collapsed, leading/trailing `-` removed.
-  * `System Design` / `system_design` / `System-Design` → all become `system-design`.
-  * Slug is used for the index filename: `tables/<topic-slug>.table.html`.
-* **Display name** = slug with all non-alphanumeric chars replaced by a space, fully UPPERCASE.
-  * `system-design` → `SYSTEM DESIGN`, `lld` → `LLD`.
-  * Display name is the index file's `<h1>` and the `Topic` column value in `topics.html`.
+* Normalize the topic → slug + display name (§1).
 
 ## STEP 1 — LOCATE & CONFIRM (before deleting)
 
-1. Locate `tables/<topic-slug>.table.html` in the `tables/` folder.
+1. Locate `tables/<topic-slug>.table.html`.
    * File not found — STOP. Tell me this topic has no index file. Do nothing else.
 2. Find the `<tr>` whose `<td class="num">` equals the given number. Row numbers always refer to the **current table's `#` values** — use these original numbers even for multiple deletions, since renumbering happens once at the very end.
    * Row not found (number out of range) — STOP. Tell me how many rows the table has. Delete nothing.
@@ -34,53 +28,39 @@ Rules:
    * The full row (date, title, web link).
    * Which note file will be deleted (or "no note file — this is a direct link row").
    * If this is the table's **last remaining row**, also state that the table file **and** that topic's row in `topics.html` will be deleted (remaining rows get renumbered).
-4. Proceed to Step 2 only after my explicit **"yes / confirm"**. Delete nothing without confirmation.
+4. Proceed only after my explicit **"yes / confirm"**. Delete nothing without confirmation.
 
 ## STEP 2 — DELETE THE ATTACHED NOTE FILE
 
-* Extract the file path from the row's `Link to file` cell (e.g. `<a href="../notes/Some-Title.html" class="open">` → `notes/Some-Title.html`; the path is relative to the table file, hence `../`).
-* Cell **empty** (direct link row) — no file to delete. Go straight to the table step.
+* Extract the path from the row's `Link to file` cell (e.g. `<a href="../notes/Some-Title.html" class="open">` → `notes/Some-Title.html`; relative to the table file, hence `../`).
+* Cell **empty** (direct link row) — no file to delete. Go to Step 3.
 * If a path exists:
-  * First verify the file actually exists.
-  * Exists → delete it.
-  * Does not exist → skip deletion, but mention it in the report ("file already missing").
-* **Delete only the file linked in this row.** Never touch any other file in `notes/`, `assets/` or any other folder (shared assets like `assets/notes.css` are never deleted).
-* If the deleted note referenced images under `assets/img/` that no other page references, list them in the report — do not delete them unless I confirm.
-* Before deleting, verify the path resolves inside `notes/`. If it points outside, STOP and tell me.
+  * Verify the path resolves **inside `notes/`** — if it points outside, STOP and tell me.
+  * File exists → delete it. Missing → skip, and report "file already missing".
+* **Delete only the file linked in this row.** Never touch other `notes/` files or shared `assets/` (§10).
+* If the deleted note referenced `assets/img/` files that no other page references, list them in the report — do not delete them unless I confirm.
 
-## STEP 3 — REMOVE THE ROW & FIX NUMBERING
+## STEP 3 — REMOVE THE ROW & RENUMBER
 
-1. Remove the `<tr>` from `<tbody>`.
-2. **Renumber**: set the remaining rows' `<td class="num">` values to continuous numbers `1, 2, 3, ...` top to bottom.
-   * Only the `#` cell value changes — every other cell (date, title, links) stays as-is.
-   * **Never change the row order** — only close the gaps.
-   * Example: deleting `2` from rows `1,2,3,4` → remaining rows become `1,2,3`.
-3. The `<thead>` row stays exactly the same — always `# | Date | Title | Web link | Link to file`. Never add/remove/rename columns.
-4. The `<!-- ROWS END … -->` comment, `<title>`, breadcrumb and `<h1>` must stay unchanged.
+* Remove the `<tr>`, then renumber the remaining rows `1..N` top-to-bottom, preserving order (§10). Only the `#` cell changes.
+* `<thead>`, `ROWS END` comment, `<title>`, breadcrumb and `<h1>` stay unchanged (§8).
 
 ## STEP 4 — EMPTY TABLE HANDLING
 
-If **no data rows remain** after removing the row:
+If **no data rows remain**:
 
-1. **Delete** the `tables/<topic-slug>.table.html` file (do not leave an empty table).
-2. Remove that topic's `<tr>` from `topics.html` (repo root) — the row whose link points to `./tables/<topic-slug>.table.html`:
-
-   ```html
-   <tr><td class="num">3</td><td><strong>LLD</strong></td><td><a class="open" href="./tables/lld.table.html">lld.table.html</a></td></tr>
-   ```
-
-3. **Renumber** the remaining rows `1..N` (without changing order) — change only the `#` cell; `Topic` and `Link to table` stay unchanged.
-4. If `topics.html` ends up with no rows, keep the page, `<thead>` and `ROWS END` comment.
-5. Check: row count in `topics.html` == file count in the `tables/` folder.
+1. **Delete** `tables/<topic-slug>.table.html` (do not leave an empty table).
+2. Remove that topic's `<tr>` from `topics.html` (the row linking `./tables/<topic-slug>.table.html`) and renumber the remaining rows `1..N`, preserving order (§9, §10).
+3. If `topics.html` ends up with no rows, keep the page, `<thead>` and `ROWS END` comment.
+4. Check: row count in `topics.html` == file count in `tables/`.
 
 If rows remain, **do not touch `topics.html`**.
 
 ## HARD RULES
 
-* **Never run git commands** — no `git add`, no `git rm`, no commit, no stage/unstage. I handle git manually.
+* §11 applies — **no git commands** (no `git add`, `git rm`, commit, stage/unstage).
 * No file deletion without confirmation.
 * One request = delete only the rows I specified. No unsolicited "cleanup".
-* A note file is deleted only if it is linked in that row's `Link to file` cell.
 * Do not touch any other topic's table file.
 
 ## WORKFLOW SUMMARY
@@ -88,15 +68,15 @@ If rows remain, **do not touch `topics.html`**.
 ```text
 Topic + Row number
     ↓
-Normalize topic → slug + display name
+Normalize topic → slug + display name (§1)
     ↓
 Locate tables/<topic-slug>.table.html (not found → STOP)
     ↓
 Extract row, show it to me → wait for CONFIRMATION
     ↓
-Delete linked note file (if any)
+Delete linked note file (if any, inside notes/ only)
     ↓
-Remove <tr> + renumber remaining rows 1..N
+Remove <tr> + renumber remaining rows 1..N (§10)
     ↓
 No rows left → delete table file + delete topics.html row + renumber
 ```

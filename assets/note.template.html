@@ -9,8 +9,13 @@
     {{TOPIC_DISPLAY}}  topic display name, e.g. SYSTEM DESIGN
     {{TOPIC_SLUG}}     topic slug, e.g. system-design
     {{VIDEO_URL}}      YouTube URL (remove the whole Video <li> if not from a video)
+                       Web-page note: replace the Video <li> with
+                       <li><b>Source</b><a href="PAGE_URL" target="_blank" rel="noopener">Page title</a></li>
     {{VIDEO_TITLE}}    video title as link text
     {{DATE}}           DD MMM YYYY
+
+  Writing: follow prompts/notes-conventions.md — §3.1 brevity is STRICT (telegraphic bullets, 1 fact each,
+  no prose paragraphs, completeness beats brevity) and run the §7 checks before finishing.
 
   Mermaid: no script tag needed — notes.js auto-loads Mermaid when a <pre class="mermaid"> exists.
   Mermaid source must start at column 0 inside <pre class="mermaid"> and must not be
@@ -23,7 +28,9 @@
                        optional: <span class="cm"># comment</span>, <span class="hl">highlighted line</span>
   ASCII diagram      <pre class="ascii">…</pre>
   Mermaid diagram    <figure class="diagram"><pre class="mermaid">…</pre><figcaption>…</figcaption></figure>
-  Image              <figure><img src="../assets/img/<file>.png" alt="…"><figcaption>…</figcaption></figure>
+  Image              <figure><img src="../assets/img/<file>.png" alt="…"><figcaption>… Source: <a href="…">…</a></figcaption></figure>
+                       ALWAYS download the image into assets/img/ — never hotlink an external src.
+  External assets    NONE at runtime. Vendor any library into assets/vendor/<name>-<version>/ (+ LICENSE).
   Table              <div class="table-wrap"><table><thead>…</thead><tbody>…</tbody></table></div>
                        cells: <span class="yes">✓ Yes</span> / <span class="no">✗ No</span>
   Callouts           <div class="callout tip|warn|danger|info|key">
@@ -66,7 +73,7 @@
         <h1>{{TITLE}}</h1>
         <ul class="meta">
           <li><b>Topic</b>{{TOPIC_DISPLAY}}</li>
-          <li><b>Video</b><a href="{{VIDEO_URL}}">{{VIDEO_TITLE}}</a></li>
+          <li><b>Video</b><a href="{{VIDEO_URL}}" target="_blank" rel="noopener">{{VIDEO_TITLE}}</a></li>
           <li><b>Date</b>{{DATE}}</li>
         </ul>
       </header>
